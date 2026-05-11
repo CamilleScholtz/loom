@@ -1,0 +1,29 @@
+[[background]]
+name = "Former corporate auditor"
+description = "Spent years reconciling manifests against reality. Reads a ledger, weighs a story, knows what a missing crate is worth."
+starting_skills = ["records", "law"]
+initial_reputation = 1
+
+[[background]]
+name = "Decommissioned marine"
+description = "Walked back from a belt skirmish the company barely acknowledged. Carries a quiet violence."
+starting_skills = ["arms", "endurance"]
+initial_reputation = 0
+
+[[background]]
+name = "Itinerant union rep"
+description = "A datapad of contracts and many ports behind them. Speaks softly, asks precisely."
+starting_skills = ["letters", "languages"]
+initial_reputation = 0
+
+[[background]]
+name = "Defrocked chaplain"
+description = "Cast out for cause or rumor. Still knows the rites, still keeps a saint's chit in their pocket."
+starting_skills = ["rites", "confession"]
+initial_reputation = -1
+
+[[background]]
+name = "Ship's medic"
+description = "Knows wounds and what they say about the hand that made them. Trusted in sickness, watched in death."
+starting_skills = ["medicine", "anatomy"]
+initial_reputation = 1

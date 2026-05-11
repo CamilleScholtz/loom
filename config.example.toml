@@ -1,0 +1,26 @@
+# book — example user config
+#
+# Copy this file to one of:
+#   $XDG_CONFIG_HOME/book/config.toml
+#   $HOME/.config/book/config.toml
+# Or point at it explicitly:  book --config ./my-config.toml
+#
+# A missing file is fine — defaults take over. Fields are independent: set
+# only what you want to override.
+
+# OpenRouter API key. Used only if OPENROUTER_API_KEY is not set in the
+# environment (the env var always wins so you can override the file without
+# editing it). Leave blank or omit to run with the FakeClient.
+api_key = ""
+
+# Model used for every call site that doesn't have its own override below.
+# Defaults to "anthropic/claude-haiku-4-5" if omitted.
+default_model = "anthropic/claude-haiku-4-5"
+
+# Per-call-site model overrides. Anthropic recommends a cheap model for
+# routine generation and a stronger one for high-stakes turns; npc_voice is
+# the most expressive call site, so consider upgrading it.
+[models]
+# scene_narration = "anthropic/claude-haiku-4-5"
+# options         = "anthropic/claude-haiku-4-5"
+# npc_voice       = "anthropic/claude-sonnet-4-6"

@@ -1,0 +1,11 @@
+[[contact]]
+role = "magistrate"
+description = "The local authority who summoned or admitted the investigator. Has the power to open doors and the will to close them."
+
+[[contact]]
+role = "tavernkeep"
+description = "An early friend or wary host; ear to the village, source of the first rumors."
+
+[[contact]]
+role = "midwife"
+description = "Old enough to remember everyone's lineage; trusted by the women of the village. Knows the body and what it can be made to say."

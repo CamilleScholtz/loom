@@ -1,0 +1,12 @@
+---
+source: tests/worldgen_snapshot.rs
+assertion_line: 138
+expression: incident_summary(&result)
+---
+village: Tarnhollow
+kind: scandal
+n_principals: 2
+n_witnesses: 6
+n_public_facts: 1
+summary: rumors of adultery between Isolde Baker and Thora Reeve
+deadline_days: 11

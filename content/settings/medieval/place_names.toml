@@ -1,0 +1,24 @@
+# Village-name flavor pool. Worldgen picks one per playthrough.
+
+villages = [
+    "Ashwell",
+    "Brookmere",
+    "Coldfern",
+    "Dovecote",
+    "Eddingham",
+    "Friarsgate",
+    "Greythorn",
+    "Hawkmoor",
+    "Iverly",
+    "Junkett",
+    "Knapsdale",
+    "Larkhollow",
+    "Mossgate",
+    "Netherby",
+    "Oakshade",
+    "Pennywell",
+    "Quinnsford",
+    "Redbrook",
+    "Saltgreave",
+    "Tarnhollow",
+]

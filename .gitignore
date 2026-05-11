@@ -1,0 +1,4 @@
+/target
+/saves
+.env
+/config.toml

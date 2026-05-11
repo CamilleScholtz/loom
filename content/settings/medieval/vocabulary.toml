@@ -1,0 +1,6 @@
+greetings = ["Good morrow", "Well met", "God keep you", "Hail", "Good den"]
+oaths = ["By the saints", "On my mother's grave", "By the bones", "Heaven help me", "As I live"]
+time_of_day = ["dawn", "morning", "midday", "afternoon", "vespers", "dusk", "night", "the small hours"]
+money_units = ["penny", "halfpenny", "shilling", "groat", "mark"]
+taverncalls = ["Another!", "To the host!", "Quiet, you lot", "Pass the jug", "A song!"]
+weather = ["a thin rain", "fog off the river", "a hard frost", "the day clear and cold", "wind that cuts"]

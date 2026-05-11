@@ -1,0 +1,15 @@
+[[skill]]
+name = "observation"
+description = "Notices the small thing — the patched wire, the scuff on a deckplate, the look that lingers across the mess."
+
+[[skill]]
+name = "interview"
+description = "Asks the question that opens a door. Reads what is said and what is left in vacuum between."
+
+[[skill]]
+name = "deduction"
+description = "Holds many small facts at once and arranges them until they fit the manifest."
+
+[[skill]]
+name = "patience"
+description = "Waits the silence out. The other crewmate speaks first."

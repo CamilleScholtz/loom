@@ -1,0 +1,29 @@
+[[background]]
+name = "Former magistrate's clerk"
+description = "Spent years copying writs. Reads handwriting, weighs testimony, knows what an oath is worth."
+starting_skills = ["records", "law"]
+initial_reputation = 1
+
+[[background]]
+name = "Soldier returned"
+description = "Walked back from a war the village barely heard of. Carries a quiet violence."
+starting_skills = ["arms", "endurance"]
+initial_reputation = 0
+
+[[background]]
+name = "Itinerant scholar"
+description = "A satchel of books and many roads behind them. Speaks softly, asks precisely."
+starting_skills = ["letters", "languages"]
+initial_reputation = 0
+
+[[background]]
+name = "Disgraced priest"
+description = "Cast out for cause or rumor. Still knows the rites, still smells of incense."
+starting_skills = ["rites", "confession"]
+initial_reputation = -1
+
+[[background]]
+name = "Country physician"
+description = "Knows wounds and what they say about the hand that made them. Trusted in sickness."
+starting_skills = ["medicine", "anatomy"]
+initial_reputation = 1

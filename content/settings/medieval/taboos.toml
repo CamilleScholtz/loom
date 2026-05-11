@@ -1,0 +1,34 @@
+[[taboo]]
+name = "adultery"
+severity = 4
+description = "A vow broken in the body. Scandalous if known, ruinous if exposed at the wrong altar."
+
+[[taboo]]
+name = "child out of wedlock"
+severity = 5
+description = "A child without a recognized father. The mother is shamed; the family pays for it for generations."
+
+[[taboo]]
+name = "theft from a host"
+severity = 5
+description = "To take from the hand that fed you is the worst sort of theft. Few crimes are remembered longer."
+
+[[taboo]]
+name = "breaking an oath"
+severity = 4
+description = "An oath sworn before witnesses is held by them. To break one is to invite their judgment."
+
+[[taboo]]
+name = "working on a feast day"
+severity = 2
+description = "Lesser, but noticed. The priest will hear of it. The pious will remember."
+
+[[taboo]]
+name = "dishonoring the dead"
+severity = 5
+description = "Stealing from a corpse, refusing burial, or speaking foully of the recently dead. Among the worst."
+
+[[taboo]]
+name = "consorting with strangers"
+severity = 2
+description = "Quiet meetings with outsiders draw notice. Trust travels by hearsay here."

@@ -1,0 +1,79 @@
+[[occupation]]
+name = "miller"
+description = "Grinds grain for the village. Takes a share of every sack. Often suspected of taking more."
+typical_traits = ["shrewd", "patient", "stout"]
+work_location_kind = "trade"
+home_location_kind = "trade"
+work_hours = [6, 18]
+
+[[occupation]]
+name = "smith"
+description = "Iron, horseshoes, edged tools. Knows everyone's weapons by sight."
+typical_traits = ["taciturn", "bold", "honest"]
+work_location_kind = "trade"
+home_location_kind = "trade"
+work_hours = [7, 17]
+
+[[occupation]]
+name = "midwife"
+description = "Attends births and last hours. Knows everyone's lineage and most secrets."
+typical_traits = ["patient", "shrewd", "kind"]
+work_location_kind = "public"
+home_location_kind = "rural"
+work_hours = [0, 0]
+
+[[occupation]]
+name = "magistrate"
+description = "Settles disputes, signs warrants, holds the village's law on the lord's behalf."
+typical_traits = ["honest", "vain", "patient"]
+work_location_kind = "civic"
+home_location_kind = "civic"
+work_hours = [9, 17]
+
+[[occupation]]
+name = "priest"
+description = "Hears confession, performs rites. Keeps the chapel and speaks for the dead."
+typical_traits = ["devout", "patient", "shrewd"]
+work_location_kind = "sacred"
+home_location_kind = "sacred"
+work_hours = [6, 20]
+
+[[occupation]]
+name = "tavernkeep"
+description = "Pours ale, settles brawls, hears everything and remembers what suits him."
+typical_traits = ["shrewd", "stout", "lustful"]
+work_location_kind = "social"
+home_location_kind = "social"
+work_hours = [12, 24]
+
+[[occupation]]
+name = "fletcher"
+description = "Makes arrows and bowstaves. Travels to fairs to sell. Knows the road."
+typical_traits = ["patient", "curious", "wanderer"]
+work_location_kind = "trade"
+home_location_kind = "trade"
+work_hours = [8, 17]
+
+[[occupation]]
+name = "apothecary"
+description = "Mixes salves and tinctures. Trusted in sickness, suspected in death."
+typical_traits = ["scholarly", "suspicious", "curious"]
+work_location_kind = "trade"
+home_location_kind = "trade"
+work_hours = [8, 18]
+
+[[occupation]]
+name = "farmhand"
+description = "Works the fields, season by season. Owns little, sees plenty from a distance."
+typical_traits = ["patient", "envious", "stout"]
+work_location_kind = "rural"
+home_location_kind = "rural"
+work_hours = [5, 19]
+
+[[occupation]]
+name = "watchman"
+description = "Walks the lanes at night with a lantern. Knows who is out when they shouldn't be."
+typical_traits = ["bold", "lazy", "observant"]
+work_location_kind = "public"
+home_location_kind = "rural"
+work_hours = [20, 6]

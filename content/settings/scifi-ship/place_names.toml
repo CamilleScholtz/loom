@@ -1,0 +1,25 @@
+# Ship-name flavor pool. Worldgen picks one per playthrough — on a long-haul
+# hauler, the "village" is the ship.
+
+villages = [
+    "Calypso",
+    "Black Mare",
+    "Slow Mercy",
+    "Pennywise",
+    "Argo IV",
+    "Long Reach",
+    "Saltline",
+    "Coldhold",
+    "Mercy Burn",
+    "Dustwitch",
+    "Wayfarer",
+    "Lodestar",
+    "Iron Magdalene",
+    "Half-Light",
+    "Quiet Hour",
+    "Far Bell",
+    "Threadneedle",
+    "Lantern",
+    "Old Faith",
+    "Coriolis",
+]

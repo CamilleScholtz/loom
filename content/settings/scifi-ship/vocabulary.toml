@@ -1,0 +1,6 @@
+greetings = ["Hey", "How's it riding", "Burn easy", "Long shift?", "You're up", "Stay sharp"]
+oaths = ["By the dust", "Black void", "Saints in vacuum", "Hell's airlock", "On my mother's tour", "Stars take me"]
+time_of_day = ["first watch", "morning watch", "midwatch", "afternoon watch", "dog watch", "last watch", "lights-down", "the small hours"]
+money_units = ["credit", "chit", "scrip", "company note", "share"]
+taverncalls = ["Another!", "Pass it down", "Quiet, you lot", "Who's dealing?", "Pour it"]
+weather = ["the hull groaning", "a long burn", "third-shift hum", "vacuum-cold on the bulkhead", "the deckplate humming under boots"]

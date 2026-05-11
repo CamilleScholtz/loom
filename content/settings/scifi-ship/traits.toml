@@ -1,0 +1,79 @@
+[[virtue]]
+name = "Kind"
+description = "Notices a tired crewmate; covers a shift without making it owed. People talk to them off the clock."
+
+[[virtue]]
+name = "Shrewd"
+description = "Reads a face for what the mouth won't say. Hard to lie to, harder to short-change."
+
+[[virtue]]
+name = "Patient"
+description = "Waits out a problem the way you wait out a burn. The other one breaks silence first."
+
+[[virtue]]
+name = "Bold"
+description = "Steps into the cargo bay first. Asks the captain what no one else will."
+
+[[virtue]]
+name = "Honest"
+description = "Says what they mean. You know where you stand — useful or sharp, depending."
+
+[[virtue]]
+name = "Devout"
+description = "Keeps a small altar in their bunk — a saint's chit, a quiet ritual before burn. Private, observed, not preached."
+
+[[virtue]]
+name = "Curious"
+description = "Cannot leave a sealed panel alone. Trouble finds the curious — and so do the answers."
+
+[[vice]]
+name = "Vain"
+description = "Their pride is a lever someone will find. Polishes the uniform when the bulkhead's leaking."
+
+[[vice]]
+name = "Wrathful"
+description = "A short fuse on a long memory. Grievances are logged like manifest entries — kept, indexed, accruing."
+
+[[vice]]
+name = "Greedy"
+description = "Sees the cut in every favor. Slow to lend, quick to remember the loan."
+
+[[vice]]
+name = "Cowardly"
+description = "Looks for the airlock before the room. Won't stand a watch that might cost them."
+
+[[vice]]
+name = "Lustful"
+description = "Easily drawn to bodies in close quarters. Easily compromised by them."
+
+[[vice]]
+name = "Lazy"
+description = "The hardest job is the one most worth ducking. Lets the system warn yellow before they move."
+
+[[vice]]
+name = "Suspicious"
+description = "Trusts no one quite enough. Hears a wrench drop and thinks sabotage."
+
+[[inclination]]
+name = "Romantic"
+description = "Drawn to entanglements; reads the mess hall for them."
+
+[[inclination]]
+name = "Ambitious"
+description = "Sees the ladder. Counts the rungs to first mate, to captain, to their own berth."
+
+[[inclination]]
+name = "Wanderer"
+description = "Restless. Always half-thinking of the next contract, the next port, the next ship."
+
+[[inclination]]
+name = "Homebody"
+description = "Their bunk, their messmates, their corner of the galley. Strangers off-ship are work."
+
+[[inclination]]
+name = "Pious"
+description = "Carries the chapel with them between the stars. Mercy first; judgment, but slow."
+
+[[inclination]]
+name = "Scholarly"
+description = "Notes things down in a hand-log. Asks twice. Believes the small reading saves the large one."

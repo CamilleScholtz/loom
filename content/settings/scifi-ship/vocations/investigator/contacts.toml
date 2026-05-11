@@ -1,0 +1,11 @@
+[[contact]]
+role = "captain"
+description = "The local authority who signed the investigator on. Has the power to open compartments and the will to seal them."
+
+[[contact]]
+role = "cook"
+description = "An early friend or wary host; ear to the crew, source of the first rumors over the mess pot."
+
+[[contact]]
+role = "medic"
+description = "Old enough to remember everyone's chart; trusted across the watches. Knows the body and what it can be made to say."

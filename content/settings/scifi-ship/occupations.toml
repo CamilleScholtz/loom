@@ -1,0 +1,79 @@
+[[occupation]]
+name = "engineer"
+description = "Keeps the drive running. Takes a share of every overtime. Often suspected of fudging the maintenance log."
+typical_traits = ["shrewd", "patient", "stout"]
+work_location_kind = "trade"
+home_location_kind = "trade"
+work_hours = [6, 18]
+
+[[occupation]]
+name = "machinist"
+description = "Steel, fittings, edged tools. Knows everyone's gear by sight."
+typical_traits = ["taciturn", "bold", "honest"]
+work_location_kind = "trade"
+home_location_kind = "trade"
+work_hours = [7, 17]
+
+[[occupation]]
+name = "medic"
+description = "Attends injuries and last hours. Knows everyone's chart and most secrets."
+typical_traits = ["patient", "shrewd", "kind"]
+work_location_kind = "public"
+home_location_kind = "rural"
+work_hours = [0, 0]
+
+[[occupation]]
+name = "captain"
+description = "Settles disputes, signs off the manifest, holds the ship's law on the company's behalf."
+typical_traits = ["honest", "vain", "patient"]
+work_location_kind = "civic"
+home_location_kind = "civic"
+work_hours = [9, 17]
+
+[[occupation]]
+name = "chaplain"
+description = "Hears confession, performs rites. Keeps the chapel-locker and speaks for the lost."
+typical_traits = ["devout", "patient", "shrewd"]
+work_location_kind = "sacred"
+home_location_kind = "sacred"
+work_hours = [6, 20]
+
+[[occupation]]
+name = "cook"
+description = "Pours coffee, settles brawls, hears everything and remembers what suits him."
+typical_traits = ["shrewd", "stout", "lustful"]
+work_location_kind = "social"
+home_location_kind = "social"
+work_hours = [12, 24]
+
+[[occupation]]
+name = "navigator"
+description = "Plots the burns and the ports. Travels by long-haul, knows every shipping lane in the belt."
+typical_traits = ["patient", "curious", "wanderer"]
+work_location_kind = "trade"
+home_location_kind = "trade"
+work_hours = [8, 17]
+
+[[occupation]]
+name = "ship's medic"
+description = "Mixes pharma and dressings. Trusted in sickness, suspected in death."
+typical_traits = ["scholarly", "suspicious", "curious"]
+work_location_kind = "trade"
+home_location_kind = "trade"
+work_hours = [8, 18]
+
+[[occupation]]
+name = "hydroponics tech"
+description = "Tends the trays, watch by watch. Owns little, sees plenty from the back of the ship."
+typical_traits = ["patient", "envious", "stout"]
+work_location_kind = "rural"
+home_location_kind = "rural"
+work_hours = [5, 19]
+
+[[occupation]]
+name = "security"
+description = "Walks the corridors after lights-down with a hand-light. Knows who is up when they shouldn't be."
+typical_traits = ["bold", "lazy", "observant"]
+work_location_kind = "public"
+home_location_kind = "rural"
+work_hours = [20, 6]

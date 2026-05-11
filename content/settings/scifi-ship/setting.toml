@@ -1,0 +1,7 @@
+name = "scifi-ship"
+period = "near-future long-haul cargo hauler, no FTL, no aliens; the void is the weather"
+register = "working-class, plainspoken, technical; crew slang worn smooth from use"
+version = "0.1.0"
+place_kind = "ship"
+inhabitant_singular = "crewmate"
+inhabitant_plural = "crew"

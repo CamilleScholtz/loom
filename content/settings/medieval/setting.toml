@@ -1,0 +1,7 @@
+name = "medieval"
+period = "vaguely medieval European, low fantasy, no magic"
+register = "plainspoken, observational, period-flavored"
+version = "0.1.0"
+place_kind = "village"
+inhabitant_singular = "villager"
+inhabitant_plural = "villagers"

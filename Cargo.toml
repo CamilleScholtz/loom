@@ -1,0 +1,42 @@
+[package]
+name = "book"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+# TUI
+ratatui = "0.29"
+crossterm = "0.28"
+
+# LLM (async, isolated to src/llm/)
+openrouter-rs = "0.9"
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+futures-util = { version = "0.3", default-features = false, features = ["std"] }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+pulldown-cmark = "0.10"
+
+# RNG (seeded, deterministic worldgen)
+rand = "0.8"
+rand_chacha = "0.3"
+
+# Errors, CLI, logging
+anyhow = "1"
+thiserror = "1"
+clap = { version = "4", features = ["derive"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+tracing-appender = "0.2"
+
+[dev-dependencies]
+proptest = "1"
+insta = { version = "1", features = ["yaml"] }
+tempfile = "3"
+
+[profile.release-lto]
+inherits = "release"
+lto = "fat"
+codegen-units = 1

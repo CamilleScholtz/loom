@@ -1,0 +1,34 @@
+[[taboo]]
+name = "venting atmosphere"
+severity = 5
+description = "To open the ship to vacuum where a crewmate could be. Forgiven by no one, remembered by everyone."
+
+[[taboo]]
+name = "abandoning a crewmate"
+severity = 5
+description = "Leaving someone on the wrong side of a bulkhead, a comms-down EVA, a bad port. The worst breach of the unwritten contract."
+
+[[taboo]]
+name = "skimming the manifest"
+severity = 4
+description = "Pocketing from the cargo or the company's books. The captain will hand you over to the company; the crew will hand you nothing again."
+
+[[taboo]]
+name = "drugs on shift"
+severity = 3
+description = "Off-watch is your business. On-watch with a panel in front of you, it's everyone's."
+
+[[taboo]]
+name = "fraternization with the captain"
+severity = 3
+description = "On a small hauler, command and bed don't mix. Discipline frays both ways."
+
+[[taboo]]
+name = "cheating at cards"
+severity = 2
+description = "Lesser, but tracked. A tour is long. A reputation is longer."
+
+[[taboo]]
+name = "working through a memorial"
+severity = 2
+description = "When a name is being said in the mess, your wrench goes down. Even the engineers stop. Especially them."

@@ -1,0 +1,78 @@
+---
+source: tests/worldgen_snapshot.rs
+expression: location_list(&result.world)
+---
+- id: 0
+  name: elsewhere
+  kind: offmap
+  adjacent: []
+- id: 1
+  name: tavern
+  kind: social
+  adjacent:
+    - 2
+    - 5
+    - 8
+- id: 2
+  name: mill
+  kind: trade
+  adjacent:
+    - 1
+    - 4
+    - 7
+    - 9
+    - 10
+- id: 3
+  name: chapel
+  kind: sacred
+  adjacent:
+    - 11
+- id: 4
+  name: market square
+  kind: public
+  adjacent:
+    - 2
+    - 8
+- id: 5
+  name: "magistrate's house"
+  kind: civic
+  adjacent:
+    - 1
+- id: 6
+  name: apothecary
+  kind: trade
+  adjacent:
+    - 11
+- id: 7
+  name: smithy
+  kind: trade
+  adjacent:
+    - 2
+    - 11
+- id: 8
+  name: well
+  kind: public
+  adjacent:
+    - 1
+    - 4
+    - 10
+- id: 9
+  name: gravehouse
+  kind: sacred
+  adjacent:
+    - 2
+    - 11
+- id: 10
+  name: fields
+  kind: rural
+  adjacent:
+    - 2
+    - 8
+- id: 11
+  name: river bend
+  kind: rural
+  adjacent:
+    - 3
+    - 6
+    - 7
+    - 9

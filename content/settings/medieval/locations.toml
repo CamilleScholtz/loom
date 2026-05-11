@@ -1,0 +1,54 @@
+[[location]]
+name = "tavern"
+kind = "social"
+description = "A low-ceilinged common room. Smoke, ale-stink, the smell of bodies. Where rumor is currency."
+
+[[location]]
+name = "mill"
+kind = "trade"
+description = "Wheel and stone. Flour on every surface. The miller's house attached at the back."
+
+[[location]]
+name = "chapel"
+kind = "sacred"
+description = "Stone walls, a single bell. The priest hears confession here, and the dead are kept overnight."
+
+[[location]]
+name = "market square"
+kind = "public"
+description = "Cobbles and a worn cross. Stalls in the morning, idlers in the afternoon."
+
+[[location]]
+name = "magistrate's house"
+kind = "civic"
+description = "The biggest house on the square. The magistrate keeps records, weighs disputes, signs warrants."
+
+[[location]]
+name = "apothecary"
+kind = "trade"
+description = "Hung with drying herbs and jars of stranger things. The smell catches in the throat."
+
+[[location]]
+name = "smithy"
+kind = "trade"
+description = "Heat, hammer, soot. The smith hears everyone and says little."
+
+[[location]]
+name = "well"
+kind = "public"
+description = "Stone-rimmed, with a bucket on a fraying rope. Women come at dawn and evening; this is where gossip travels."
+
+[[location]]
+name = "gravehouse"
+kind = "sacred"
+description = "A low shed beside the chapel where the dead are washed and watched."
+
+[[location]]
+name = "fields"
+kind = "rural"
+description = "Strips of furrow and fallow. Hedgerows. A path to the river beyond."
+
+[[location]]
+name = "river bend"
+kind = "rural"
+description = "Where the river slows and the willows hang. Children fish here. Lovers meet here."

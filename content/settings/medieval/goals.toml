@@ -1,0 +1,207 @@
+# Goal library for the medieval setting. Each goal is an archetype an NPC can
+# pursue; the engine scores them against the NPC's needs, traits, and values
+# every tick and forms / resolves them through Event::GoalFormed / GoalResolved.
+
+[[goal]]
+kind = "eat"
+summary_template = "to put something hot in the belly"
+trait_affinity = []
+value_affinity = [["Pleasure", 0.3], ["Family", 0.1]]
+
+[goal.urgency]
+op = "need"
+need = "Hunger"
+
+[goal.precondition]
+op = "need_at_least"
+need = "Hunger"
+threshold = 0.4
+
+[goal.resolve]
+op = "need_below"
+need = "Hunger"
+threshold = 0.2
+
+# ---
+
+[[goal]]
+kind = "sleep"
+summary_template = "to find a corner and close their eyes"
+trait_affinity = [["Lazy", 0.2]]
+value_affinity = [["Family", 0.1]]
+
+[goal.urgency]
+op = "need"
+need = "Sleep"
+
+[goal.precondition]
+op = "need_at_least"
+need = "Sleep"
+threshold = 0.5
+
+[goal.resolve]
+op = "need_below"
+need = "Sleep"
+threshold = 0.2
+
+# ---
+
+[[goal]]
+kind = "belong"
+summary_template = "to sit among familiar faces"
+trait_affinity = [["Pious", 0.2]]
+value_affinity = [["Family", 0.4], ["Faith", 0.2]]
+
+[goal.urgency]
+op = "need"
+need = "Belonging"
+
+[goal.precondition]
+op = "need_at_least"
+need = "Belonging"
+threshold = 0.5
+
+[goal.resolve]
+op = "need_below"
+need = "Belonging"
+threshold = 0.3
+
+# ---
+
+[[goal]]
+kind = "earn"
+summary_template = "to put coin in their purse"
+trait_affinity = [["Greedy", 0.3], ["Ambitious", 0.3]]
+value_affinity = [["Ambition", 0.4], ["Duty", 0.2]]
+
+[goal.urgency]
+op = "need"
+need = "Purpose"
+
+[goal.precondition]
+op = "need_at_least"
+need = "Purpose"
+threshold = 0.4
+
+[goal.resolve]
+op = "need_below"
+need = "Purpose"
+threshold = 0.25
+
+# ---
+
+[[goal]]
+kind = "avenge"
+summary_template = "to even the score with whoever wronged them"
+trait_affinity = [["Wrathful", 0.5], ["Vain", 0.2]]
+value_affinity = [["Reputation", 0.4]]
+
+[goal.urgency]
+op = "grievance_max"
+
+[goal.precondition]
+op = "grievance_against_any_at_least"
+threshold = 40
+
+[goal.resolve]
+op = "grievance_max_below"
+threshold = 10
+
+# ---
+
+[[goal]]
+kind = "confess"
+summary_template = "to speak the truth before another"
+trait_affinity = [["Devout", 0.5], ["Honest", 0.3]]
+value_affinity = [["Faith", 0.5], ["Duty", 0.2]]
+
+[goal.urgency]
+op = "const"
+value = 0.3
+
+[goal.precondition]
+op = "has_trait"
+name = "Devout"
+
+[goal.resolve]
+op = "precondition_lost"
+
+# ---
+
+[[goal]]
+kind = "court"
+summary_template = "to draw closer to the one their heart turns to"
+trait_affinity = [["Romantic", 0.5], ["Lustful", 0.3]]
+value_affinity = [["Pleasure", 0.4]]
+
+[goal.urgency]
+op = "affection_max"
+
+[goal.precondition]
+op = "affection_for_any_at_least"
+threshold = 40
+
+[goal.resolve]
+op = "affection_max_at_least"
+threshold = 80
+
+# ---
+
+[[goal]]
+kind = "flee"
+summary_template = "to put distance between themselves and danger"
+trait_affinity = [["Cowardly", 0.5]]
+value_affinity = [["Freedom", 0.4]]
+
+[goal.urgency]
+op = "need"
+need = "Safety"
+
+[goal.precondition]
+op = "need_at_least"
+need = "Safety"
+threshold = 0.7
+
+[goal.resolve]
+op = "need_below"
+need = "Safety"
+threshold = 0.3
+
+# ---
+
+[[goal]]
+kind = "vendetta"
+summary_template = "to bring ruin on the one who wronged them"
+trait_affinity = [["Wrathful", 0.6], ["Vain", 0.2], ["Bold", 0.2]]
+value_affinity = [["Reputation", 0.4], ["Family", 0.2]]
+
+[goal.urgency]
+op = "grievance_max"
+
+[goal.precondition]
+op = "grievance_against_any_at_least"
+threshold = 50
+
+[goal.resolve]
+op = "grievance_max_below"
+threshold = 20
+
+# ---
+
+[[goal]]
+kind = "support"
+summary_template = "to stand by the one they love when they need it"
+trait_affinity = [["Kind", 0.4], ["Devout", 0.2]]
+value_affinity = [["Family", 0.5], ["Duty", 0.3]]
+
+[goal.urgency]
+op = "affection_max"
+
+[goal.precondition]
+op = "affection_for_any_at_least"
+threshold = 60
+
+[goal.resolve]
+op = "affection_max_at_least"
+threshold = 95
+

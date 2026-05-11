@@ -1,0 +1,69 @@
+[[item]]
+name = "loaf of dark bread"
+kind = "food"
+value = 1
+properties = { perishable = "true" }
+
+[[item]]
+name = "tallow candle"
+kind = "light"
+value = 2
+properties = { burn_hours = "4" }
+
+[[item]]
+name = "woolen cloak"
+kind = "clothing"
+value = 18
+properties = { warm = "true" }
+
+[[item]]
+name = "iron knife"
+kind = "tool"
+value = 12
+properties = { edged = "true" }
+
+[[item]]
+name = "leather purse"
+kind = "container"
+value = 6
+
+[[item]]
+name = "apothecary's pestle"
+kind = "tool"
+value = 24
+properties = { profession = "apothecary" }
+
+[[item]]
+name = "magistrate's seal"
+kind = "regalia"
+value = 240
+properties = { profession = "magistrate", unique = "true" }
+
+[[item]]
+name = "signet ring"
+kind = "jewelry"
+value = 180
+properties = { unique = "true" }
+
+[[item]]
+name = "dagger"
+kind = "weapon"
+value = 36
+properties = { edged = "true", concealable = "true" }
+
+[[item]]
+name = "ledger"
+kind = "record"
+value = 60
+properties = { written = "true" }
+
+[[item]]
+name = "linen kerchief"
+kind = "clothing"
+value = 3
+
+[[item]]
+name = "wax-stoppered phial"
+kind = "container"
+value = 8
+properties = { fragile = "true" }

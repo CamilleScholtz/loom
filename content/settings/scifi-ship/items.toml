@@ -1,0 +1,69 @@
+[[item]]
+name = "ration pack"
+kind = "food"
+value = 1
+properties = { perishable = "true" }
+
+[[item]]
+name = "hand-torch"
+kind = "light"
+value = 2
+properties = { burn_hours = "8" }
+
+[[item]]
+name = "thermal coverall"
+kind = "clothing"
+value = 18
+properties = { warm = "true" }
+
+[[item]]
+name = "multi-tool"
+kind = "tool"
+value = 12
+properties = { edged = "true" }
+
+[[item]]
+name = "ditty bag"
+kind = "container"
+value = 6
+
+[[item]]
+name = "medic's diagnostic wand"
+kind = "tool"
+value = 24
+properties = { profession = "medic" }
+
+[[item]]
+name = "captain's seal-key"
+kind = "regalia"
+value = 240
+properties = { profession = "captain", unique = "true" }
+
+[[item]]
+name = "company signet"
+kind = "jewelry"
+value = 180
+properties = { unique = "true" }
+
+[[item]]
+name = "pulse-cutter"
+kind = "weapon"
+value = 36
+properties = { edged = "true", concealable = "true" }
+
+[[item]]
+name = "cargo manifest"
+kind = "record"
+value = 60
+properties = { written = "true" }
+
+[[item]]
+name = "spare vac-suit patch"
+kind = "clothing"
+value = 3
+
+[[item]]
+name = "contraband flask"
+kind = "container"
+value = 8
+properties = { fragile = "true" }

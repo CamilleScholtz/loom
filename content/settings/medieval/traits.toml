@@ -1,0 +1,79 @@
+[[virtue]]
+name = "Kind"
+description = "A soft answer in a hard moment. People speak more freely to them."
+
+[[virtue]]
+name = "Shrewd"
+description = "Reads a face for what the mouth hides. Hard to mislead, harder to swindle."
+
+[[virtue]]
+name = "Patient"
+description = "Waits for the right word, the right hour. The other speaks first."
+
+[[virtue]]
+name = "Bold"
+description = "Walks in without knocking. Asks the question others would not."
+
+[[virtue]]
+name = "Honest"
+description = "Says what they mean. People know where they stand — for good or ill."
+
+[[virtue]]
+name = "Devout"
+description = "Holds their oaths and their feast days. The priest knows them by name."
+
+[[virtue]]
+name = "Curious"
+description = "Cannot let a loose thread alone. Trouble finds the curious."
+
+[[vice]]
+name = "Vain"
+description = "Their pride is a lever someone will find."
+
+[[vice]]
+name = "Wrathful"
+description = "A short fuse on a long memory. Grudges keep."
+
+[[vice]]
+name = "Greedy"
+description = "Sees the coin in every favor. Slow to give, quick to keep."
+
+[[vice]]
+name = "Cowardly"
+description = "Looks for the door before the room. Will not stand when standing costs."
+
+[[vice]]
+name = "Lustful"
+description = "Easily drawn to bodies, easily compromised by them."
+
+[[vice]]
+name = "Lazy"
+description = "The hardest path is the one most worth not taking. Will let things rot."
+
+[[vice]]
+name = "Suspicious"
+description = "Trusts no one quite enough. Hears a knife in every laugh."
+
+[[inclination]]
+name = "Romantic"
+description = "Drawn to entanglements; reads the room for them."
+
+[[inclination]]
+name = "Ambitious"
+description = "Sees the ladder. Counts the rungs. Each conversation is a step."
+
+[[inclination]]
+name = "Wanderer"
+description = "Restless. Always half-thinking of the road out."
+
+[[inclination]]
+name = "Homebody"
+description = "Roots, hearth, familiar walls. Strangers are work."
+
+[[inclination]]
+name = "Pious"
+description = "Carries the chapel with them. Mercy first; judgment, but slow."
+
+[[inclination]]
+name = "Scholarly"
+description = "Notes things down. Asks twice. Believes the small fact saves the large one."

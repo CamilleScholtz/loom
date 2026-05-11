@@ -1,0 +1,54 @@
+[[location]]
+name = "mess"
+kind = "social"
+description = "Low ceiling, the smell of recycled air and old coffee. Where rumor is currency and the cards come out after dinner."
+
+[[location]]
+name = "engine room"
+kind = "trade"
+description = "Heat, grease, the bass-note of the drive. The chief hears everyone and says little."
+
+[[location]]
+name = "chapel-locker"
+kind = "sacred"
+description = "A meter-square recess off the corridor, with a single chit-saint and a hand-rail. Names of the lost are kept here."
+
+[[location]]
+name = "cargo bay"
+kind = "public"
+description = "Stacks of crates and the smell of cold steel. Stevedores work the morning; idlers find corners in the afternoon."
+
+[[location]]
+name = "bridge"
+kind = "civic"
+description = "The biggest cabin forward. The captain keeps the log here, weighs disputes, signs off on the manifest."
+
+[[location]]
+name = "medbay"
+kind = "trade"
+description = "Hung with med-gel pouches and trays of stranger things. The smell of antiseptic catches in the throat."
+
+[[location]]
+name = "machine shop"
+kind = "trade"
+description = "Heat, hammer, swarf. The engineer hears everyone and remembers what suits her."
+
+[[location]]
+name = "water-tap"
+kind = "public"
+description = "Stainless basin at a corridor junction, with a slow tap. Crew come at watch-change; this is where gossip travels."
+
+[[location]]
+name = "morgue-locker"
+kind = "sacred"
+description = "A refrigerated drawer beside the medbay where the dead are kept until the next port."
+
+[[location]]
+name = "hydroponics"
+kind = "rural"
+description = "Strips of grow-tray under sodium light. Damp air. A path back to the spine corridor."
+
+[[location]]
+name = "observation deck"
+kind = "rural"
+description = "Where the viewport widens and the deckplate goes quiet. Off-shift crew come here. Lovers meet here."
