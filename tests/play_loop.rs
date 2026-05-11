@@ -9,14 +9,14 @@ use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
 use tempfile::TempDir;
 
-use book::content::ContentRegistry;
-use book::engine::{
+use loom::content::ContentRegistry;
+use loom::engine::{
     self, Action, Event, EventLog, Fact, Time, available_actions,
 };
-use book::engine::worldgen;
-use book::storage::SaveDir;
-use book::systems::apply_event;
-use book::world::{NpcId, PlayerCharacter};
+use loom::engine::worldgen;
+use loom::storage::SaveDir;
+use loom::systems::apply_event;
+use loom::world::{NpcId, PlayerCharacter};
 
 fn registry() -> ContentRegistry {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("content");

@@ -35,7 +35,7 @@ No game-engine framework. The game is text and turns; bringing in `bevy` or simi
 Single crate, organized by module. Workspaces are premature.
 
 ```
-book/
+loom/
   Cargo.toml
   GAME.md
   TECH.md
@@ -286,4 +286,4 @@ Color and styling stay restrained — period-appropriate. ASCII art is welcome f
 - **Budget target per playthrough.** A 2–4 hour run with ~80 events and several dialogue exchanges per event has real cost implications. We will measure during prototyping and tune model tiers.
 - **Free-form dialogue parsing reliability.** The player types a line and the LLM identifies intent; we need a confidence threshold below which we ask for clarification rather than misinterpret. To be tuned.
 - **Worldgen step count vs. quality.** How many in-world years do we simulate before play begins? Long enough for pressures to be real, short enough to keep startup fast. Estimate: 3–10 years; will tune.
-- **Mod loading.** Eventually we want users to drop in their own content packs. v1 ships with bundled packs only; loading from a `~/.config/book/` style directory is a later addition.
+- **Mod loading.** Eventually we want users to drop in their own content packs. v1 ships with bundled packs only; loading from a `~/.config/loom/` style directory is a later addition.

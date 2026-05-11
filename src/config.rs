@@ -1,4 +1,4 @@
-//! User-level config file, loaded from `~/.config/book/config.toml` by default
+//! User-level config file, loaded from `~/.config/loom/config.toml` by default
 //! (override with `--config <path>`). Carries the OpenRouter API key and
 //! per-call-site model selection. Missing file is not an error — the defaults
 //! kick in.
@@ -53,14 +53,14 @@ pub enum CallSite {
 }
 
 impl UserConfig {
-    /// Returns the conventional config path: `$XDG_CONFIG_HOME/book/config.toml`
-    /// when set, else `$HOME/.config/book/config.toml`. Returns `None` if
+    /// Returns the conventional config path: `$XDG_CONFIG_HOME/loom/config.toml`
+    /// when set, else `$HOME/.config/loom/config.toml`. Returns `None` if
     /// neither env var is available (unusual; typically only in stripped CI
     /// containers).
     pub fn default_path() -> Option<PathBuf> {
         if let Ok(xdg) = std::env::var("XDG_CONFIG_HOME") {
             if !xdg.is_empty() {
-                return Some(PathBuf::from(xdg).join("book").join("config.toml"));
+                return Some(PathBuf::from(xdg).join("loom").join("config.toml"));
             }
         }
         std::env::var("HOME")
@@ -69,7 +69,7 @@ impl UserConfig {
             .map(|h| {
                 PathBuf::from(h)
                     .join(".config")
-                    .join("book")
+                    .join("loom")
                     .join("config.toml")
             })
     }

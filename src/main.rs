@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use clap::Parser;
 
-use book::{Cli, app, config::UserConfig, content, llm, logging};
+use loom::{Cli, app, config::UserConfig, content, llm, logging};
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
@@ -18,7 +18,7 @@ fn main() -> Result<()> {
         save_dir = %cli.save_dir.display(),
         dry_run = cli.dry_run,
         config_path = ?cli.config.as_deref().map(|p| p.display().to_string()),
-        "book starting"
+        "loom starting"
     );
 
     let llm_cfg = llm::LlmConfig::resolve(cli.dry_run, user_config.api_key.as_deref());

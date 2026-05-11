@@ -3,11 +3,11 @@
 
 use std::path::PathBuf;
 
-use book::config::DEFAULT_MODEL;
-use book::content::ContentRegistry;
-use book::engine::{Action, worldgen};
-use book::llm::builders;
-use book::world::{NpcId, PlayerCharacter};
+use loom::config::DEFAULT_MODEL;
+use loom::content::ContentRegistry;
+use loom::engine::{Action, worldgen};
+use loom::llm::builders;
+use loom::world::{NpcId, PlayerCharacter};
 
 fn registry() -> ContentRegistry {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("content");

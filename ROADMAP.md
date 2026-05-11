@@ -15,7 +15,7 @@ For game design rationale, see `GAME.md`. For technical architecture and decisio
 
 ## Phase 0 — Bootstrap (done)
 
-- [x] Cargo project initialized as `book`, Rust edition 2024
+- [x] Cargo project initialized as `loom`, Rust edition 2024
 - [x] Dependencies pinned in `Cargo.toml` per `TECH.md` "Core Dependencies"
 - [x] Module skeleton scaffolded: `app`, `ui`, `engine`, `systems`, `world`, `llm`, `content`, `storage`
 - [x] Minimal title screen renders; `[q]` quits
@@ -33,7 +33,7 @@ The substrate everything else depends on. After this phase, you can serialize a 
 - [x] **LLM module skeleton.** Worker thread owns a `tokio::runtime::Runtime`. `llm::Client::chat(req)` is sync; internally `block_on`s an async call via `openrouter-rs`. Streaming via `std::sync::mpsc::Receiver<String>`. See `TECH.md` "LLM Integration".
 - [x] **`--dry-run` LLM mode.** A `FakeClient` returns deterministic stub strings (`"[npc says X]"`). Selected by CLI flag. Lets tests and dev run without API cost.
 - [x] **CLI arguments via `clap`.** `--seed`, `--save-dir`, `--dry-run`, `--log-level`. Wire into `App::new`.
-- [x] **Logging to file.** `tracing-subscriber` writes structured logs to `<save-dir>/book.log`. TUI keeps stdout.
+- [x] **Logging to file.** `tracing-subscriber` writes structured logs to `<save-dir>/loom.log`. TUI keeps stdout.
 
 ---
 
@@ -144,7 +144,7 @@ Once an end-to-end playthrough works, deepen and harden.
 
 Speculative. Captured for memory.
 
-- Mod loading from `~/.config/book/content/`.
+- Mod loading from `~/.config/loom/content/`.
 - Additional setting packs: sci-fi (station, post-apocalyptic, or similar).
 - Additional vocation packs: physician, confessor, scribe.
 - Hypothesis-linking UI as a first-class feature.

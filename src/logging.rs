@@ -8,7 +8,7 @@ pub fn init(save_dir: &Path, level: tracing::Level) -> Result<WorkerGuard> {
     std::fs::create_dir_all(save_dir)
         .with_context(|| format!("creating log dir {}", save_dir.display()))?;
 
-    let appender = tracing_appender::rolling::never(save_dir, "book.log");
+    let appender = tracing_appender::rolling::never(save_dir, "loom.log");
     let (non_blocking, guard) = tracing_appender::non_blocking(appender);
 
     let filter = EnvFilter::try_from_default_env()

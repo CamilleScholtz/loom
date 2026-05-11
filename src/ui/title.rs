@@ -45,7 +45,7 @@ pub fn render(frame: &mut Frame, state: &TitleState, _app: &App) {
         .split(inner);
 
     let title = Paragraph::new(Line::from(Span::styled(
-        "B O O K",
+        "L O O M",
         Style::default()
             .fg(Color::Cyan)
             .add_modifier(Modifier::BOLD),

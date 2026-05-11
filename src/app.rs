@@ -2108,7 +2108,7 @@ mod tests {
                 epilogue: Some("acme/epi".into()),
             },
         };
-        let path = std::path::PathBuf::from("/tmp/book-config-test.toml");
+        let path = std::path::PathBuf::from("/tmp/loom-config-test.toml");
         let state = ConfigState::from_config(&cfg, path.clone());
         assert_eq!(state.fields.len(), 6);
         assert_eq!(state.drafts[0], "sk-test");

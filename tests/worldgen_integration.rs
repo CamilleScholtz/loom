@@ -3,10 +3,10 @@ use std::path::PathBuf;
 
 use tempfile::TempDir;
 
-use book::content::ContentRegistry;
-use book::engine::worldgen;
-use book::storage::SaveDir;
-use book::world::{NpcId, PlayerCharacter};
+use loom::content::ContentRegistry;
+use loom::engine::worldgen;
+use loom::storage::SaveDir;
+use loom::world::{NpcId, PlayerCharacter};
 
 fn registry() -> ContentRegistry {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("content");
@@ -25,7 +25,7 @@ fn fake_player() -> PlayerCharacter {
     }
 }
 
-fn assert_world_valid(world: &book::world::World) {
+fn assert_world_valid(world: &loom::world::World) {
     let npc_ids: BTreeSet<NpcId> = world.npcs.keys().copied().collect();
     let loc_ids: BTreeSet<_> = world.locations.keys().copied().collect();
     let fact_ids: BTreeSet<_> = world.facts.keys().copied().collect();

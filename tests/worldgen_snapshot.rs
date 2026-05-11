@@ -1,8 +1,8 @@
 use std::path::PathBuf;
 
-use book::content::ContentRegistry;
-use book::engine::worldgen;
-use book::world::{NpcId, PlayerCharacter};
+use loom::content::ContentRegistry;
+use loom::engine::worldgen;
+use loom::world::{NpcId, PlayerCharacter};
 
 fn registry() -> ContentRegistry {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("content");
@@ -53,7 +53,7 @@ struct IncidentSummary {
     deadline_days: u32,
 }
 
-fn npc_roster(world: &book::world::World) -> Vec<NpcRow> {
+fn npc_roster(world: &loom::world::World) -> Vec<NpcRow> {
     let mut rows: Vec<NpcRow> = world
         .npcs
         .values()
@@ -80,7 +80,7 @@ fn npc_roster(world: &book::world::World) -> Vec<NpcRow> {
     rows
 }
 
-fn location_list(world: &book::world::World) -> Vec<LocationRow> {
+fn location_list(world: &loom::world::World) -> Vec<LocationRow> {
     let mut rows: Vec<LocationRow> = world
         .locations
         .values()
@@ -100,7 +100,7 @@ fn location_list(world: &book::world::World) -> Vec<LocationRow> {
 }
 
 fn incident_summary(result: &worldgen::WorldgenResult) -> IncidentSummary {
-    use book::engine::IncidentKind;
+    use loom::engine::IncidentKind;
     let kind = match &result.incident.kind {
         IncidentKind::Death { .. } => "death",
         IncidentKind::Disappearance { .. } => "disappearance",
@@ -149,7 +149,7 @@ fn village_seed_42_seeds_secrets_from_the_pack() {
         .iter()
         .map(|c| c.name.as_str())
         .collect();
-    let adults: Vec<&book::world::Npc> = result
+    let adults: Vec<&loom::world::Npc> = result
         .world
         .npcs
         .values()

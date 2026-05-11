@@ -18,13 +18,13 @@ pub mod ui;
 pub mod world;
 
 #[derive(Parser, Debug, Clone)]
-#[command(name = "book", about = "a system-driven narrative")]
+#[command(name = "loom", about = "a system-driven narrative")]
 pub struct Cli {
     /// Deterministic seed for worldgen. Randomized if omitted.
     #[arg(long)]
     pub seed: Option<u64>,
 
-    /// Directory for the current save (world.toml, events.log, book.log, ...).
+    /// Directory for the current save (world.toml, events.log, loom.log, ...).
     #[arg(long, default_value = "saves/current")]
     pub save_dir: PathBuf,
 
@@ -49,8 +49,8 @@ pub struct Cli {
     pub vocation: String,
 
     /// Path to a TOML config file (api_key, default_model, [models] overrides).
-    /// Defaults to `$XDG_CONFIG_HOME/book/config.toml` or
-    /// `$HOME/.config/book/config.toml`. Missing file is not an error.
+    /// Defaults to `$XDG_CONFIG_HOME/loom/config.toml` or
+    /// `$HOME/.config/loom/config.toml`. Missing file is not an error.
     #[arg(long)]
     pub config: Option<PathBuf>,
 }

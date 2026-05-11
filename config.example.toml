@@ -1,9 +1,9 @@
-# book — example user config
+# loom — example user config
 #
 # Copy this file to one of:
-#   $XDG_CONFIG_HOME/book/config.toml
-#   $HOME/.config/book/config.toml
-# Or point at it explicitly:  book --config ./my-config.toml
+#   $XDG_CONFIG_HOME/loom/config.toml
+#   $HOME/.config/loom/config.toml
+# Or point at it explicitly:  loom --config ./my-config.toml
 #
 # A missing file is fine — defaults take over. Fields are independent: set
 # only what you want to override.
