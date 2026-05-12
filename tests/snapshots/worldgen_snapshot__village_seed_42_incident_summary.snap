@@ -1,6 +1,6 @@
 ---
 source: tests/worldgen_snapshot.rs
-assertion_line: 138
+assertion_line: 139
 expression: incident_summary(&result)
 ---
 village: Tarnhollow
@@ -8,5 +8,5 @@ kind: scandal
 n_principals: 2
 n_witnesses: 6
 n_public_facts: 1
-summary: rumors of adultery between Isolde Baker and Thora Reeve
+summary: rumors of adultery between Zara Fletcher and Vela Glover
 deadline_days: 11

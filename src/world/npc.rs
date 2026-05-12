@@ -34,6 +34,20 @@ pub struct Secret {
     pub category: String,
 }
 
+/// A promise this NPC has made to someone — typically the player, via the
+/// `promise` proposal during dialogue. The simulation tracks these so a future
+/// tick can score honored/broken commitments and let trust drift accordingly.
+/// `by_day` is the absolute in-world day the promise is due; `None` means
+/// open-ended ("someday").
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Promise {
+    pub promisee: NpcId,
+    pub summary: String,
+    #[serde(default)]
+    pub by_day: Option<u32>,
+    pub made_at: Time,
+}
+
 /// One block of a per-NPC daily schedule override. `start_hour..end_hour` is
 /// the half-open window in 24-hour time; `end_hour <= start_hour` wraps past
 /// midnight. `location_kind` is matched against `Location.kind`. `weight`
@@ -117,6 +131,17 @@ pub struct Npc {
     /// for the current hour.
     #[serde(default)]
     pub daily_schedule: Option<Schedule>,
+    /// Items this NPC carries. Plain strings — the engine treats them as
+    /// surface flavor (per the GAME.md rule). Mutated only by
+    /// `Event::HandedOver`. The player is NPC(0); their inventory lives here
+    /// too. Notebook entries are the primary surface; there is no inventory UI
+    /// in v1.
+    #[serde(default)]
+    pub inventory: Vec<String>,
+    /// Commitments this NPC has voiced — typically through the `promise`
+    /// dialogue proposal. Mutated only by `Event::PromiseMade`.
+    #[serde(default)]
+    pub promises: Vec<Promise>,
 }
 
 impl Npc {
@@ -145,6 +170,8 @@ impl Npc {
             memorable_events: Vec::new(),
             secrets: Vec::new(),
             daily_schedule: None,
+            inventory: Vec::new(),
+            promises: Vec::new(),
         }
     }
 }

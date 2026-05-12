@@ -74,6 +74,92 @@ pub struct AssertedFact {
     pub truthfulness: Truthfulness,
 }
 
+/// Whether the NPC, in proposing a relocation, intends to lead the player,
+/// depart on their own, or invite the player to go *together*. The engine
+/// uses this to decide whether the player gets a follow-up action and
+/// whether the NPC moves now or only on the player's accept.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ProposalScope {
+    /// NPC moves now; player gets a "follow {name}" action on the next menu.
+    #[default]
+    Lead,
+    /// NPC walks off without the player. No follow-up action surfaces.
+    Depart,
+    /// NPC waits and asks; the player gets a "go together" action that
+    /// moves both on accept.
+    Joint,
+}
+
+/// One state-changing proposal the LLM has voiced through dialogue. Each is a
+/// bounded structural request — the engine validates ids, schedules events, and
+/// (where appropriate) surfaces a follow-up action for the player. None of these
+/// directly mutate the player; the player's location/possessions only change
+/// via player-chosen actions.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum Proposal {
+    /// The NPC suggests changing scene to `to`. The engine validates the
+    /// destination is reachable from the current location.
+    Relocate {
+        to: u32,
+        #[serde(default)]
+        scope: ProposalScope,
+        #[serde(default)]
+        why: Option<String>,
+    },
+    /// The NPC offers to fetch another character. `who` must resolve to a
+    /// known, alive NPC; otherwise the proposal is silently dropped.
+    Fetch {
+        who: u32,
+        #[serde(default)]
+        why: Option<String>,
+    },
+    /// The NPC hands the player an item. The engine prefers items already
+    /// in the giver's `inventory`; if not present, the named string still
+    /// transfers (the item is plain flavor text — see GAME.md re: surface
+    /// vs. state). Empty `item` strings are dropped.
+    HandOver {
+        item: String,
+        #[serde(default)]
+        why: Option<String>,
+    },
+    /// The NPC binds themselves to a future commitment. `by_day` is the
+    /// absolute in-world day the promise is due, or `None` for open-ended.
+    Promise {
+        summary: String,
+        #[serde(default)]
+        by_day: Option<u32>,
+    },
+    /// The NPC ends the conversation. The engine clears the in-scene
+    /// dialogue history with this NPC and records a memorable event.
+    BreakOff {
+        #[serde(default)]
+        reason: Option<String>,
+    },
+    /// The NPC names a new location into existence — typically a place the
+    /// dialogue calls for that the simulation hasn't modeled yet ("let's go
+    /// to my bunk"). The engine allocates a fresh LocationId and links it
+    /// bidirectionally to the speaker's current location. If `relocate` is
+    /// `Some`, the same call also moves the NPC there with the given scope
+    /// (lead/depart/joint) so a single tool invocation covers
+    /// `discover-then-go-there`.
+    DiscoverLocation {
+        name: String,
+        /// Optional category for the new location (e.g. "bunk", "corridor",
+        /// "storage"). Field name is `location_kind` to avoid clashing with
+        /// the `kind` serde discriminator on this enum.
+        #[serde(default, rename = "location_kind")]
+        location_kind: Option<String>,
+        #[serde(default)]
+        description: Option<String>,
+        #[serde(default)]
+        relocate: Option<ProposalScope>,
+        #[serde(default)]
+        why: Option<String>,
+    },
+}
+
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PlayerLineInterpretation {
     #[serde(default)]
@@ -100,6 +186,8 @@ pub struct NpcTurnResponse {
     pub references: Vec<u32>,
     #[serde(default)]
     pub asserts: Vec<AssertedFact>,
+    #[serde(default)]
+    pub proposals: Vec<Proposal>,
     #[serde(default)]
     pub reply: String,
 }
@@ -144,6 +232,73 @@ pub fn tool_schema() -> serde_json::Value {
                         }
                     },
                     "required": ["summary"]
+                }
+            },
+            "proposals": {
+                "type": "array",
+                "description": "Bounded state-change proposals the NPC voices through this line. The engine validates each and decides which actions surface to the player. Leave empty unless the dialogue genuinely calls for one.",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "kind": {
+                            "type": "string",
+                            "enum": ["relocate", "fetch", "hand_over", "promise", "break_off", "discover_location"]
+                        },
+                        "to": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "description": "relocate: LocationId of the destination."
+                        },
+                        "scope": {
+                            "type": "string",
+                            "enum": ["lead", "depart", "joint"],
+                            "description": "relocate or discover_location.relocate: lead=NPC moves now, player can follow. depart=NPC walks off alone. joint=NPC waits, asks player to come."
+                        },
+                        "who": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "description": "fetch: NpcId of the character to summon."
+                        },
+                        "item": {
+                            "type": "string",
+                            "description": "hand_over: short noun phrase for the item passed to the player."
+                        },
+                        "summary": {
+                            "type": "string",
+                            "description": "promise: one-line statement of the commitment."
+                        },
+                        "by_day": {
+                            "type": ["integer", "null"],
+                            "minimum": 0,
+                            "description": "promise: absolute in-world day the promise is due. Null for open-ended."
+                        },
+                        "reason": {
+                            "type": ["string", "null"],
+                            "description": "break_off: short reason the NPC ends the conversation."
+                        },
+                        "name": {
+                            "type": "string",
+                            "description": "discover_location: short noun phrase for the new place (e.g. \"the bunks\", \"the access hatch\")."
+                        },
+                        "location_kind": {
+                            "type": ["string", "null"],
+                            "description": "discover_location: short category (e.g. \"bunk\", \"corridor\", \"storage\")."
+                        },
+                        "description": {
+                            "type": ["string", "null"],
+                            "description": "discover_location: one-sentence flavor description of the new place."
+                        },
+                        "relocate": {
+                            "type": ["string", "null"],
+                            "enum": ["lead", "depart", "joint", null],
+                            "description": "discover_location: if set, the NPC also moves to (or invites the player toward) the newly discovered location in the same turn."
+                        },
+                        "why": {
+                            "type": ["string", "null"],
+                            "description": "relocate/fetch/hand_over/discover_location: short motivation, surfaced in the notebook."
+                        }
+                    },
+                    "required": ["kind"]
                 }
             },
             "reply": {
@@ -391,6 +546,46 @@ mod tests {
         let raw = r#"{"intent":"flirt","tone":"playful","romantic_signal":"flirt","reply":"Hush."}"#;
         let r = parse_npc_turn_response(raw).unwrap();
         assert_eq!(r.romantic_signal, Some(RomanticSignal::Flirt));
+    }
+
+    #[test]
+    fn proposals_parse_each_kind_with_serde_tag() {
+        let raw = r#"{
+            "reply": "I'll meet you at the chapel at dawn.",
+            "proposals": [
+                {"kind":"relocate","to":3,"scope":"lead","why":"come with me"},
+                {"kind":"fetch","who":7},
+                {"kind":"hand_over","item":"a folded letter"},
+                {"kind":"promise","summary":"I will testify","by_day":5},
+                {"kind":"break_off","reason":"too tired to talk"}
+            ]
+        }"#;
+        let r = parse_npc_turn_response(raw).unwrap();
+        assert_eq!(r.proposals.len(), 5);
+        match &r.proposals[0] {
+            Proposal::Relocate { to, scope, why } => {
+                assert_eq!(*to, 3);
+                assert_eq!(*scope, ProposalScope::Lead);
+                assert_eq!(why.as_deref(), Some("come with me"));
+            }
+            _ => panic!("first should be relocate"),
+        }
+        assert!(matches!(r.proposals[1], Proposal::Fetch { who: 7, .. }));
+        assert!(matches!(r.proposals[2], Proposal::HandOver { .. }));
+        match &r.proposals[3] {
+            Proposal::Promise { summary, by_day } => {
+                assert!(summary.contains("testify"));
+                assert_eq!(*by_day, Some(5));
+            }
+            _ => panic!("fourth should be promise"),
+        }
+        assert!(matches!(r.proposals[4], Proposal::BreakOff { .. }));
+    }
+
+    #[test]
+    fn missing_proposals_default_to_empty() {
+        let r = parse_npc_turn_response(r#"{"reply":"yes"}"#).unwrap();
+        assert!(r.proposals.is_empty());
     }
 
     #[test]

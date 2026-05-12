@@ -6,16 +6,28 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph, Wrap},
 };
 
+use super::commands;
 use super::palette;
-use crate::app::{ActionEntry, App, SceneMode, SceneState};
+use crate::app::{ActionEntry, App, ChatLine, SceneMode, SceneState};
 use crate::engine::Action;
-use crate::world::{LocationId, NpcId};
+use crate::world::{LocationId, NpcId, Sex};
+
+fn sex_symbol(sex: Sex) -> &'static str {
+    match sex {
+        Sex::Female => "♀",
+        Sex::Male => "♂",
+    }
+}
 
 /// Minimum terminal width at which we render the two-column layout. Below
 /// this we collapse to the original vertical stack so narrow terminals still
 /// work.
 const WIDE_THRESHOLD: u16 = 100;
 const SIDEBAR_WIDTH: u16 = 26;
+/// Maximum NPCs to render in the "here now" sidebar (and inline presence row on
+/// narrow terminals). Overflow collapses to a "+N others" line so a crowded
+/// room stays readable.
+const PRESENCE_DISPLAY_CAP: usize = 4;
 
 pub fn render(frame: &mut Frame, app: &App, state: &SceneState) {
     let area = frame.area();
@@ -150,16 +162,28 @@ fn render_presence_inline(frame: &mut Frame, area: Rect, app: &App, state: &Scen
             palette::dim(),
         ));
     } else {
-        for (i, id) in state.present.iter().enumerate() {
+        let shown = state.present.len().min(PRESENCE_DISPLAY_CAP);
+        for (i, id) in state.present.iter().take(shown).enumerate() {
             if i > 0 {
                 spans.push(Span::styled(", ", palette::dim()));
             }
-            let name = session
-                .world
-                .npc(*id)
+            let npc = session.world.npc(*id);
+            let name = npc
                 .map(|n| n.name.clone())
                 .unwrap_or_else(|| format!("#{}", id.0));
             spans.push(Span::styled(name, palette::npc_style(*id)));
+            if let Some(sym) = npc.map(|n| sex_symbol(n.sex)) {
+                spans.push(Span::raw(" "));
+                spans.push(Span::styled(sym, palette::dim()));
+            }
+        }
+        let extra = state.present.len().saturating_sub(shown);
+        if extra > 0 {
+            spans.push(Span::styled(", ", palette::dim()));
+            spans.push(Span::styled(
+                format!("+{} more", extra),
+                palette::dim(),
+            ));
         }
     }
     frame.render_widget(Paragraph::new(Line::from(spans)).wrap(Wrap { trim: true }), area);
@@ -189,7 +213,12 @@ fn render_you_panel(frame: &mut Frame, area: Rect, app: &App, state: &SceneState
         let name = player
             .map(|p| p.name.clone())
             .unwrap_or_else(|| "you".into());
-        lines.push(Line::from(Span::styled(name, palette::player())));
+        let mut head: Vec<Span> = vec![Span::styled(name, palette::player())];
+        if let Some(sym) = player.map(|p| sex_symbol(p.sex)) {
+            head.push(Span::raw(" "));
+            head.push(Span::styled(sym, palette::dim()));
+        }
+        lines.push(Line::from(head));
 
         // Conditional mood line — only when valence crosses a threshold.
         if let Some(mood) = player.and_then(|p| palette::mood_label(p.mood.valence)) {
@@ -267,7 +296,8 @@ fn render_here_now(frame: &mut Frame, area: Rect, app: &App, state: &SceneState)
             palette::dim(),
         )));
     } else {
-        for id in &state.present {
+        let shown = state.present.len().min(PRESENCE_DISPLAY_CAP);
+        for id in state.present.iter().take(shown) {
             let npc = session.world.npc(*id);
             let name = npc
                 .map(|n| n.name.clone())
@@ -276,10 +306,21 @@ fn render_here_now(frame: &mut Frame, area: Rect, app: &App, state: &SceneState)
                 .and_then(|n| n.occupation.clone())
                 .map(|o| format!("  {}", o));
             let mut spans = vec![Span::styled(name, palette::npc_style_bold(*id))];
+            if let Some(sym) = npc.map(|n| sex_symbol(n.sex)) {
+                spans.push(Span::raw(" "));
+                spans.push(Span::styled(sym, palette::dim()));
+            }
             if let Some(o) = occ {
                 spans.push(Span::styled(o, palette::dim()));
             }
             lines.push(Line::from(spans));
+        }
+        let extra = state.present.len().saturating_sub(shown);
+        if extra > 0 {
+            lines.push(Line::from(Span::styled(
+                format!("+{} others", extra),
+                palette::dim(),
+            )));
         }
     }
     let p = Paragraph::new(lines).wrap(Wrap { trim: true }).block(
@@ -328,9 +369,20 @@ fn render_ways_out(frame: &mut Frame, area: Rect, app: &App, state: &SceneState)
 fn render_lower(frame: &mut Frame, area: Rect, app: &App, state: &SceneState) {
     match &state.mode {
         SceneMode::Browsing => render_actions(frame, area, state),
-        SceneMode::DialogueLine { npc, buffer } => {
-            render_dialogue_chatbox(frame, area, app, *npc, ChatTail::Input(buffer))
-        }
+        SceneMode::DialogueLine {
+            npc,
+            buffer,
+            autocomplete_selected,
+        } => render_dialogue_chatbox(
+            frame,
+            area,
+            app,
+            *npc,
+            ChatTail::Input {
+                buffer,
+                autocomplete_selected: *autocomplete_selected,
+            },
+        ),
         SceneMode::DialogueStreaming {
             npc, npc_name, buffer, revealed, ..
         } => {
@@ -413,8 +465,13 @@ fn action_line(entry: &ActionEntry, selected: bool) -> Line<'_> {
 }
 
 enum ChatTail<'a> {
-    /// The player is typing — show "> buffer▌" beneath the transcript.
-    Input(&'a str),
+    /// The player is typing — show "> buffer▌" beneath the transcript. If
+    /// `buffer` is in slash-command form, an autocomplete popup is rendered
+    /// just above the input line.
+    Input {
+        buffer: &'a str,
+        autocomplete_selected: usize,
+    },
     /// The model is streaming the NPC's reply — show it live with a cursor,
     /// or a "(thinking…)" placeholder before the first visible char arrives.
     Streaming { npc_name: &'a str, buffer: &'a str },
@@ -436,7 +493,7 @@ fn render_dialogue_chatbox(
         .and_then(|s| s.world.npc(npc).map(|n| n.name.clone()))
         .unwrap_or_else(|| "them".into());
 
-    let history: Vec<(bool, String)> = app
+    let history: Vec<ChatLine> = app
         .session
         .as_ref()
         .and_then(|s| s.dialogue_history.get(&npc).cloned())
@@ -451,33 +508,98 @@ fn render_dialogue_chatbox(
     frame.render_widget(block, area);
 
     let mut lines: Vec<Line> = Vec::with_capacity(history.len() * 2 + 4);
-    for (is_player, text) in &history {
-        if *is_player {
-            lines.push(Line::from(vec![
-                Span::styled("you  ", palette::player()),
-                Span::styled(text.clone(), palette::player()),
-            ]));
-        } else {
-            lines.push(Line::from(vec![
-                Span::styled(format!("{}  ", npc_name.trim()), palette::npc_style_bold(npc)),
-                Span::styled(text.clone(), palette::npc_style(npc)),
-            ]));
+    for entry in &history {
+        match entry {
+            ChatLine::Player(text) => {
+                let mut spans: Vec<Span> = vec![Span::styled("you  ", palette::player())];
+                spans.extend(
+                    super::text::dialogue_spans(text, palette::player())
+                        .into_iter()
+                        .map(|s| Span::styled(s.content.into_owned(), s.style)),
+                );
+                lines.push(Line::from(spans));
+            }
+            ChatLine::Npc(text) => {
+                let mut spans: Vec<Span> = vec![Span::styled(
+                    format!("{}  ", npc_name.trim()),
+                    palette::npc_style_bold(npc),
+                )];
+                spans.extend(
+                    super::text::dialogue_spans(text, palette::npc_style(npc))
+                        .into_iter()
+                        .map(|s| Span::styled(s.content.into_owned(), s.style)),
+                );
+                lines.push(Line::from(spans));
+            }
+            ChatLine::System(text) => {
+                // Slash-command output. Dimmed and prefixed with a marker so
+                // it reads as a quiet aside, not as something either party
+                // actually said.
+                lines.push(Line::from(vec![
+                    Span::styled("›  ", palette::dim()),
+                    Span::styled(text.clone(), palette::dim().add_modifier(Modifier::ITALIC)),
+                ]));
+            }
         }
     }
 
     match tail {
-        ChatTail::Input(buffer) => {
+        ChatTail::Input { buffer, autocomplete_selected } => {
             if !lines.is_empty() {
                 lines.push(Line::from(""));
             }
-            lines.push(Line::from(vec![
-                Span::styled("> ", palette::dim()),
-                Span::styled(buffer.to_string(), palette::player()),
-                Span::styled(
-                    "▌",
-                    palette::player().add_modifier(Modifier::SLOW_BLINK),
-                ),
-            ]));
+            // Autocomplete popup: only when the buffer is in `/prefix` form.
+            // We render the matches as compact rows just above the prompt;
+            // the active row is REVERSED so it reads as "this is the one Tab
+            // will pick" without taking a colour.
+            if let Some(prefix) = commands::autocomplete_prefix(buffer) {
+                let matches = commands::matches(prefix);
+                if !matches.is_empty() {
+                    let n = matches.len();
+                    let active = if n == 0 { 0 } else { autocomplete_selected % n };
+                    for (i, cmd) in matches.iter().enumerate() {
+                        let row_style = if i == active {
+                            palette::selected()
+                        } else {
+                            palette::dim()
+                        };
+                        lines.push(Line::from(vec![
+                            Span::styled("  ", Style::default()),
+                            Span::styled(format!("/{:<8}", cmd.name), row_style),
+                            Span::styled("  ", Style::default()),
+                            Span::styled(cmd.blurb, palette::dim()),
+                        ]));
+                    }
+                    lines.push(Line::from(""));
+                }
+            }
+            // Slash buffers render with a distinct prefix and accent so the
+            // player sees at a glance whether they're addressing the NPC or
+            // the system.
+            let is_cmd = buffer.trim_start().starts_with('/');
+            let prompt = if is_cmd { ":  " } else { "> " };
+            let text_style = if is_cmd {
+                palette::dim().add_modifier(Modifier::BOLD)
+            } else {
+                palette::player()
+            };
+            let mut input_spans: Vec<Span> = vec![Span::styled(prompt, palette::dim())];
+            if is_cmd {
+                // Don't parse `*emotes*` in slash-command buffers — `/help`
+                // isn't gesture text.
+                input_spans.push(Span::styled(buffer.to_string(), text_style));
+            } else {
+                input_spans.extend(
+                    super::text::dialogue_spans(buffer, text_style)
+                        .into_iter()
+                        .map(|s| Span::styled(s.content.into_owned(), s.style)),
+                );
+            }
+            input_spans.push(Span::styled(
+                "▌",
+                text_style.add_modifier(Modifier::SLOW_BLINK),
+            ));
+            lines.push(Line::from(input_spans));
         }
         ChatTail::Streaming { npc_name: nm, buffer } => {
             if buffer.is_empty() {
@@ -489,14 +611,20 @@ fn render_dialogue_chatbox(
                     ),
                 ]));
             } else {
-                lines.push(Line::from(vec![
-                    Span::styled(format!("{}  ", nm.trim()), palette::npc_style_bold(npc)),
-                    Span::styled(buffer.to_string(), palette::npc_style(npc)),
-                    Span::styled(
-                        "▌",
-                        palette::npc_style(npc).add_modifier(Modifier::SLOW_BLINK),
-                    ),
-                ]));
+                let mut spans: Vec<Span> = vec![Span::styled(
+                    format!("{}  ", nm.trim()),
+                    palette::npc_style_bold(npc),
+                )];
+                spans.extend(
+                    super::text::dialogue_spans(buffer, palette::npc_style(npc))
+                        .into_iter()
+                        .map(|s| Span::styled(s.content.into_owned(), s.style)),
+                );
+                spans.push(Span::styled(
+                    "▌",
+                    palette::npc_style(npc).add_modifier(Modifier::SLOW_BLINK),
+                ));
+                lines.push(Line::from(spans));
             }
         }
         ChatTail::AwaitContinue => { /* hint shown in the controls strip */ }
@@ -554,15 +682,11 @@ fn render_accuse(
         )));
     } else {
         for (i, id) in targets.iter().enumerate() {
-            let name = app
-                .session
-                .as_ref()
-                .and_then(|s| s.world.npc(*id).map(|n| n.name.clone()))
+            let npc = app.session.as_ref().and_then(|s| s.world.npc(*id));
+            let name = npc
+                .map(|n| n.name.clone())
                 .unwrap_or_else(|| format!("#{}", id.0));
-            let occ = app
-                .session
-                .as_ref()
-                .and_then(|s| s.world.npc(*id).and_then(|n| n.occupation.clone()));
+            let occ = npc.and_then(|n| n.occupation.clone());
             let marker = if i == selected { "▶ " } else { "  " };
             let name_style = if i == selected {
                 palette::selected()
@@ -573,6 +697,10 @@ fn render_accuse(
                 Span::styled(marker, palette::dim()),
                 Span::styled(name, name_style),
             ];
+            if let Some(sym) = npc.map(|n| sex_symbol(n.sex)) {
+                spans.push(Span::raw(" "));
+                spans.push(Span::styled(sym, palette::dim()));
+            }
             if let Some(o) = occ {
                 spans.push(Span::styled(format!("  {}", o), palette::dim()));
             }
@@ -591,18 +719,33 @@ fn render_accuse(
 // ---- controls strip ---------------------------------------------------------
 
 fn render_controls(frame: &mut Frame, area: Rect, state: &SceneState) {
-    let pairs: &[(&str, &str)] = match state.mode {
+    // For the dialogue input, swap the hint set when the buffer is in
+    // slash-command form so the player sees Tab/↑↓ instead of the regular
+    // speak hints.
+    let cmd_hints: &[(&str, &str)] = &[
+        ("↵", "run"),
+        ("tab", "complete"),
+        ("↑/↓", "pick"),
+        ("esc", "back"),
+    ];
+    let pairs: &[(&str, &str)] = match &state.mode {
         SceneMode::Browsing => &[
             ("j/k", "move"),
             ("↵", "choose"),
             ("q", "quit"),
         ],
-        SceneMode::DialogueLine { .. } => &[
-            ("type", "your line"),
-            ("↵", "speak"),
-            ("⌫", "erase"),
-            ("esc", "back"),
-        ],
+        SceneMode::DialogueLine { buffer, .. } => {
+            if commands::autocomplete_prefix(buffer).is_some() {
+                cmd_hints
+            } else {
+                &[
+                    ("type", "your line"),
+                    ("/", "commands"),
+                    ("↵", "speak"),
+                    ("esc", "back"),
+                ]
+            }
+        }
         SceneMode::DialogueStreaming { .. } => &[("…", "listening")],
         SceneMode::DialogueReply { .. } => &[
             ("↵", "say more"),

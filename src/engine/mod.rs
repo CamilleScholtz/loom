@@ -2,6 +2,7 @@ pub mod action;
 pub mod event;
 pub mod incident;
 pub mod interpret;
+pub mod npc_tools;
 pub mod sim;
 pub mod worldgen;
 

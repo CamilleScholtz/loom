@@ -1,3 +1,4 @@
+pub mod commands;
 pub mod config;
 pub mod creation;
 pub mod epilogue;
@@ -6,6 +7,7 @@ pub mod palette;
 pub mod ready;
 pub mod save_browser;
 pub mod scene;
+pub mod text;
 pub mod title;
 
 use ratatui::Frame;

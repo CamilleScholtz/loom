@@ -803,6 +803,7 @@ locations = []
             vice: "Vain".into(),
             inclination: "Scholarly".into(),
             background: "Itinerant scholar".into(),
+            sex: crate::world::Sex::Female,
         };
 
         let save_a = SaveDir::open(dir_a.path()).unwrap();

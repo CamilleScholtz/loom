@@ -120,6 +120,16 @@ pub fn border_focus() -> Style {
     Style::default().fg(Color::Cyan)
 }
 
+/// Inline narrative actions / emotes inside dialogue — text wrapped in
+/// `*asterisks*` in a `Spoken` line, or in the player's typed input. Renders
+/// italic + dim so it reads as motion-and-gesture distinct from the speech
+/// around it. The asterisks themselves are stripped before rendering.
+pub fn action() -> Style {
+    Style::default()
+        .add_modifier(Modifier::ITALIC)
+        .add_modifier(Modifier::DIM)
+}
+
 /// Border style for danger / consequence frames (accusation confirmation).
 pub fn border_warn() -> Style {
     Style::default()

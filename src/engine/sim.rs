@@ -529,6 +529,7 @@ mod tests {
             vice: "Vain".into(),
             inclination: "Scholarly".into(),
             background: "Itinerant".into(),
+            sex: crate::world::Sex::Female,
         };
         let r = worldgen::run(&reg, 7, &player).unwrap();
         let mut w = r.world;

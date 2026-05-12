@@ -14,7 +14,7 @@ use crate::systems::Edge;
 #[allow(unused_imports)]
 pub use ids::{FactId, ItemId, LocationId, NpcId};
 pub use location::Location;
-pub use npc::{MemorableEvent, Npc, Schedule, ScheduleBlock, Secret};
+pub use npc::{MemorableEvent, Npc, Promise, Schedule, ScheduleBlock, Secret};
 pub use player::PlayerCharacter;
 pub use sex::Sex;
 

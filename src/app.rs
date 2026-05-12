@@ -19,7 +19,7 @@ use crate::llm::builders;
 use crate::storage::{self, SaveDir, SaveSlot};
 use crate::systems::apply_event;
 use crate::ui;
-use crate::world::{LocationId, NpcId, PlayerCharacter, World};
+use crate::world::{LocationId, NpcId, PlayerCharacter, Sex, World};
 use crate::Cli;
 
 pub struct App {
@@ -40,10 +40,35 @@ pub struct Session {
     pub log: EventLog,
     pub rng: ChaCha8Rng,
     pub incident: Incident,
-    /// Per-NPC running transcript of the current location's dialogue. Each
-    /// entry is `(is_player, line)`, oldest first. Cleared on location change
-    /// so each scene's conversation is fresh.
-    pub dialogue_history: HashMap<NpcId, Vec<(bool, String)>>,
+    /// Per-NPC running transcript of the current location's dialogue. Cleared
+    /// on location change so each scene's conversation is fresh. `System`
+    /// lines (slash-command output) are interleaved for display but stripped
+    /// before the history is handed to the LLM.
+    pub dialogue_history: HashMap<NpcId, Vec<ChatLine>>,
+    /// Extra player-facing actions queued by recent NPC proposals (e.g. a
+    /// `FollowNpc` after a `relocate` lead). Filtered against the current
+    /// scene by `begin_scene`; cleared on player movement so leftovers from
+    /// a previous location don't bleed into the new scene.
+    pub pending_extras: Vec<Action>,
+}
+
+/// One entry in the per-NPC dialogue transcript. `System` lines are output
+/// from slash commands like `/inspect` — they show up in the chat box but
+/// are filtered out before the history is sent to the LLM, so the model
+/// can't mistake them for things the player said.
+#[derive(Clone, Debug)]
+pub enum ChatLine {
+    Player(String),
+    Npc(String),
+    System(String),
+}
+
+impl ChatLine {
+    pub fn text(&self) -> &str {
+        match self {
+            ChatLine::Player(s) | ChatLine::Npc(s) | ChatLine::System(s) => s,
+        }
+    }
 }
 
 pub enum Screen {
@@ -192,6 +217,13 @@ pub struct EpilogueState {
     pub body: String,
     pub outcome_label: String,
     pub scroll: u16,
+    /// Receiver for the streaming epilogue while it is in flight. When `None`,
+    /// `body` is the final text (either from the LLM or the fallback).
+    pub body_rx: Option<llm::StreamReceiver>,
+    /// Pre-rendered fallback to drop in if the stream errors or yields nothing.
+    /// Stored here so we don't need to thread the world/incident/outcome into
+    /// the drain step.
+    pub fallback_body: String,
 }
 
 pub struct ReadyState {
@@ -225,6 +257,17 @@ pub struct SceneState {
     /// will be cached on `Done`. `None` if narration came from cache or a
     /// fallback path that bypassed the stream.
     pub narration_cache_key: Option<(LocationId, u8)>,
+    /// Receiver for the options forced-tool-call stream while in flight. While
+    /// `Some`, each entry's `flavored` is still `None` and the UI renders bare
+    /// `engine_label`s; once the stream finalizes we parse the accumulated
+    /// tool args and fill them in — see [`App::drain_options_stream`].
+    pub options_rx: Option<llm::StreamReceiver>,
+    /// Accumulator for `ToolArgs` fragments from the options stream. Parsed in
+    /// one shot on `Done`.
+    pub options_args_buffer: String,
+    /// Hash of `engine_label`s under which the parsed options will be cached
+    /// on `Done`. `None` while the stream is inactive.
+    pub options_cache_key: Option<u64>,
 }
 
 #[derive(Clone, Debug)]
@@ -239,6 +282,10 @@ pub enum SceneMode {
     DialogueLine {
         npc: NpcId,
         buffer: String,
+        /// Highlighted entry in the slash-command autocomplete popup. Only
+        /// meaningful when `buffer` is in `/prefix` form (no whitespace yet);
+        /// otherwise the popup isn't drawn and this is ignored.
+        autocomplete_selected: usize,
     },
     /// The NPC's response is arriving token-by-token from the LLM. We hold the
     /// receiver here and drain it from the main loop.
@@ -270,6 +317,11 @@ pub enum SceneMode {
         npc: NpcId,
         npc_name: String,
         line: String,
+        /// Set when the last LLM turn produced a `break_off` proposal or
+        /// otherwise ended the dialogue (NPC walked off via a relocate, etc.).
+        /// On dismissal we drop to `Browsing` instead of looping back into
+        /// `DialogueLine` for this NPC.
+        ended: bool,
     },
     /// Picking a target for an accusation. `targets` lists alive, non-player
     /// NPCs in display order; `selected` indexes into it.
@@ -294,6 +346,7 @@ pub enum ReturnTo {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum CreationStep {
     Setting,
+    Sex,
     Virtue,
     Vice,
     Inclination,
@@ -310,6 +363,7 @@ pub struct CreationState {
     /// All setting pack directories discovered under `<content_root>/settings/`.
     /// The Setting step shows this as a selectable list.
     pub available_settings: Vec<String>,
+    pub sex: Option<Sex>,
     pub virtue: Option<String>,
     pub vice: Option<String>,
     pub inclination: Option<String>,
@@ -319,10 +373,13 @@ pub struct CreationState {
     pub rng: ChaCha8Rng,
 }
 
+/// The Sex step shows two options in this order; the index is the selection.
+pub const SEX_OPTIONS: [Sex; 2] = [Sex::Female, Sex::Male];
+
 impl CreationState {
     pub fn new(seed: u64, cli: &Cli, registry: &ContentRegistry) -> Self {
         let mut rng = ChaCha8Rng::seed_from_u64(seed);
-        let rolled_name = roll_name(&mut rng, registry);
+        let rolled_name = roll_name(&mut rng, registry, None);
         let available_settings = content::list_setting_packs(&cli.content_root);
         let selected_index = available_settings
             .iter()
@@ -332,6 +389,7 @@ impl CreationState {
             step: CreationStep::Setting,
             staged_setting: cli.setting.clone(),
             available_settings,
+            sex: None,
             virtue: None,
             vice: None,
             inclination: None,
@@ -345,6 +403,7 @@ impl CreationState {
     pub fn option_count(&self, registry: &ContentRegistry) -> usize {
         match self.step {
             CreationStep::Setting => self.available_settings.len(),
+            CreationStep::Sex => SEX_OPTIONS.len(),
             CreationStep::Virtue => registry.setting.traits.virtues.len(),
             CreationStep::Vice => registry.setting.traits.vices.len(),
             CreationStep::Inclination => registry.setting.traits.inclinations.len(),
@@ -370,7 +429,7 @@ impl CreationState {
     }
 
     pub fn reroll_name(&mut self, registry: &ContentRegistry) {
-        self.rolled_name = roll_name(&mut self.rng, registry);
+        self.rolled_name = roll_name(&mut self.rng, registry, self.sex);
     }
 
     /// Advance to the next step, recording the selected option for the current page.
@@ -385,6 +444,18 @@ impl CreationState {
                 if let Some(pick) = self.available_settings.get(self.selected_index) {
                     self.staged_setting = pick.clone();
                 }
+                self.step = CreationStep::Sex;
+                self.selected_index = 0;
+            }
+            CreationStep::Sex => {
+                let picked = SEX_OPTIONS
+                    .get(self.selected_index)
+                    .copied()
+                    .unwrap_or_default();
+                self.sex = Some(picked);
+                // Re-roll the name so the Name step suggests a gendered choice
+                // matching the selection.
+                self.rolled_name = roll_name(&mut self.rng, registry, self.sex);
                 self.step = CreationStep::Virtue;
                 self.selected_index = 0;
             }
@@ -440,10 +511,12 @@ impl CreationState {
     pub fn back(&mut self) -> bool {
         match self.step {
             CreationStep::Setting => return true,
-            CreationStep::Virtue => {
-                // Setting stays staged — going back lets the user pick a
-                // different pack without starting over from the title.
+            CreationStep::Sex => {
                 self.step = CreationStep::Setting;
+            }
+            CreationStep::Virtue => {
+                self.sex = None;
+                self.step = CreationStep::Sex;
             }
             CreationStep::Vice => {
                 self.virtue = None;
@@ -478,14 +551,25 @@ impl CreationState {
             vice: self.vice.clone()?,
             inclination: self.inclination.clone()?,
             background: self.background.clone()?,
+            sex: self.sex?,
         })
     }
 }
 
-fn roll_name(rng: &mut ChaCha8Rng, registry: &ContentRegistry) -> String {
+fn roll_name(rng: &mut ChaCha8Rng, registry: &ContentRegistry, sex: Option<Sex>) -> String {
     use rand::seq::SliceRandom;
     let names = &registry.setting.names;
-    let mut given_pool: Vec<&String> = names.given_male.iter().chain(names.given_female.iter()).collect();
+    // When sex is known, draw from the matching given-name pool. Before the
+    // Sex step is taken we fall back to the mixed pool so the initial name
+    // suggestion isn't biased toward either list.
+    let mut given_pool: Vec<&String> = match sex {
+        Some(Sex::Male) => names.given_male.iter().collect(),
+        Some(Sex::Female) => names.given_female.iter().collect(),
+        None => names.given_male.iter().chain(names.given_female.iter()).collect(),
+    };
+    if given_pool.is_empty() {
+        given_pool = names.given_male.iter().chain(names.given_female.iter()).collect();
+    }
     let given = given_pool
         .as_mut_slice()
         .choose(rng)
@@ -534,7 +618,9 @@ impl App {
                 // for input non-blockingly so the redraw cadence is driven by
                 // token arrival rather than keypresses.
                 self.drain_narration_stream()?;
+                self.drain_options_stream()?;
                 self.drain_dialogue_stream()?;
+                self.drain_epilogue_stream()?;
                 if event::poll(STREAM_POLL)? {
                     self.handle_input()?;
                 }
@@ -808,35 +894,94 @@ impl App {
             SceneMode::DialogueLine {
                 npc,
                 mut buffer,
+                mut autocomplete_selected,
             } => match code {
                 KeyCode::Esc => { /* drop back to Browsing */ }
                 KeyCode::Backspace => {
                     buffer.pop();
-                    scene.mode = SceneMode::DialogueLine { npc, buffer };
+                    // Reset highlight when the prefix shrinks so the dropdown
+                    // doesn't point past the new shorter match list.
+                    autocomplete_selected = 0;
+                    scene.mode = SceneMode::DialogueLine { npc, buffer, autocomplete_selected };
                 }
                 KeyCode::Char(c) => {
                     buffer.push(c);
-                    scene.mode = SceneMode::DialogueLine { npc, buffer };
+                    autocomplete_selected = 0;
+                    scene.mode = SceneMode::DialogueLine { npc, buffer, autocomplete_selected };
+                }
+                KeyCode::Tab => {
+                    // Autocomplete: replace the typed prefix with the
+                    // highlighted command. Only fires while the buffer is in
+                    // command-typing form (starts with `/`, no whitespace).
+                    if let Some(prefix) = ui::commands::autocomplete_prefix(&buffer) {
+                        let matches = ui::commands::matches(prefix);
+                        if let Some(pick) = matches.get(autocomplete_selected).copied() {
+                            buffer = format!("/{}", pick.name);
+                            autocomplete_selected = 0;
+                        }
+                    }
+                    scene.mode = SceneMode::DialogueLine { npc, buffer, autocomplete_selected };
+                }
+                KeyCode::Up => {
+                    if let Some(prefix) = ui::commands::autocomplete_prefix(&buffer) {
+                        let n = ui::commands::matches(prefix).len();
+                        if n > 0 {
+                            autocomplete_selected = (autocomplete_selected + n - 1) % n;
+                        }
+                    }
+                    scene.mode = SceneMode::DialogueLine { npc, buffer, autocomplete_selected };
+                }
+                KeyCode::Down => {
+                    if let Some(prefix) = ui::commands::autocomplete_prefix(&buffer) {
+                        let n = ui::commands::matches(prefix).len();
+                        if n > 0 {
+                            autocomplete_selected = (autocomplete_selected + 1) % n;
+                        }
+                    }
+                    scene.mode = SceneMode::DialogueLine { npc, buffer, autocomplete_selected };
                 }
                 KeyCode::Enter => {
                     if buffer.trim().is_empty() {
-                        scene.mode = SceneMode::DialogueLine { npc, buffer };
+                        scene.mode = SceneMode::DialogueLine { npc, buffer, autocomplete_selected };
+                    } else if buffer.trim_start().starts_with('/') {
+                        // Slash-command path: dispatch and stay in
+                        // DialogueLine so the player can keep typing.
+                        let left = self.run_chat_command(npc, &buffer)?;
+                        if !left {
+                            if let Screen::Scene(scene) = &mut self.screen {
+                                scene.mode = SceneMode::DialogueLine {
+                                    npc,
+                                    buffer: String::new(),
+                                    autocomplete_selected: 0,
+                                };
+                            }
+                        }
+                        // `/leave` → command returned true, so we fall through
+                        // with Browsing as the parked mode (set by the
+                        // mem::replace at the top of this match).
                     } else {
                         self.submit_dialogue(npc, buffer)?;
                     }
                 }
                 _ => {
-                    scene.mode = SceneMode::DialogueLine { npc, buffer };
+                    scene.mode = SceneMode::DialogueLine { npc, buffer, autocomplete_selected };
                 }
             },
-            SceneMode::DialogueReply { npc, npc_name, line } => match code {
+            SceneMode::DialogueReply { npc, npc_name, line, ended } => match code {
                 KeyCode::Esc => { /* drop back to Browsing */ }
                 KeyCode::Enter | KeyCode::Char(' ') => {
-                    // Stay with the same NPC so the conversation can continue.
-                    scene.mode = SceneMode::DialogueLine {
-                        npc,
-                        buffer: String::new(),
-                    };
+                    if ended {
+                        // Conversation closed by the NPC. Refresh so any new
+                        // follow-ups (e.g. FollowNpc) surface in the menu.
+                        self.refresh_scene_after_inscene_action()?;
+                    } else {
+                        // Stay with the same NPC so the conversation can continue.
+                        scene.mode = SceneMode::DialogueLine {
+                            npc,
+                            buffer: String::new(),
+                            autocomplete_selected: 0,
+                        };
+                    }
                 }
                 // Any other key: keep the reply on screen instead of silently
                 // dropping back to Browsing. (mem::replace at the top of this
@@ -846,6 +991,7 @@ impl App {
                         npc,
                         npc_name,
                         line,
+                        ended,
                     };
                 }
             },
@@ -972,6 +1118,7 @@ impl App {
             rng: session_rng,
             incident,
             dialogue_history: HashMap::new(),
+            pending_extras: Vec::new(),
         });
 
         tracing::info!(
@@ -1060,6 +1207,7 @@ impl App {
             rng: session_rng,
             incident: result.incident.clone(),
             dialogue_history: HashMap::new(),
+            pending_extras: Vec::new(),
         });
 
         Ok(ReadyState {
@@ -1088,8 +1236,35 @@ impl App {
             .filter(|n| !n.dead && n.id.0 != 0 && n.location == Some(here))
             .map(|n| n.id)
             .collect();
-        let actions = available_actions(world, here);
-        let mut entries: Vec<ActionEntry> = actions
+        // Compose the base action list. `pending_extras` carries follow-ups
+        // queued by recent NPC `relocate` proposals; we filter them against
+        // the current scene before merging, so a stale extra (NPC no longer
+        // at the destination, edge severed) is dropped silently.
+        let base = available_actions(world, here);
+        let mut extras_kept: Vec<Action> = Vec::new();
+        for extra in &session.pending_extras {
+            match extra {
+                Action::FollowNpc { npc, to } => {
+                    // The destination must still be reachable and the named
+                    // NPC must be alive. We tolerate the NPC having moved on
+                    // — the action remains a useful "follow the trail."
+                    let reachable = world
+                        .location(here)
+                        .map(|l| l.adjacent.contains(to))
+                        .unwrap_or(false);
+                    let alive = world.npc(*npc).map(|n| !n.dead).unwrap_or(false);
+                    if reachable && alive {
+                        extras_kept.push(extra.clone());
+                    }
+                }
+                _ => extras_kept.push(extra.clone()),
+            }
+        }
+        // Surface follow-ups before the standard set; the player just heard
+        // someone suggest going somewhere, so it's the live option.
+        let mut combined: Vec<Action> = extras_kept;
+        combined.extend(base);
+        let entries: Vec<ActionEntry> = combined
             .into_iter()
             .map(|a| {
                 let label = engine_label(world, &a);
@@ -1129,13 +1304,15 @@ impl App {
             };
 
         // Options: forced-tool call so the model produces exactly one line per
-        // engine action, in order. We stream-drain it synchronously here so the
-        // scene renders complete on first frame; narration is the slow part
-        // and gets its own incremental stream below.
-        let mut options_cache: HashMap<u64, Vec<String>> = HashMap::new();
+        // engine action, in order. We kick off a streaming request and let
+        // `drain_options_stream` parse the accumulated tool args on `Done`.
+        // The first frame shows bare engine labels — they're overwritten with
+        // the flavored lines once they arrive.
+        let options_cache: HashMap<u64, Vec<String>> = HashMap::new();
         let labels: Vec<String> = entries.iter().map(|e| e.engine_label.clone()).collect();
-        let key = hash_labels(&labels);
-        if !labels.is_empty() {
+        let (options_rx, options_cache_key) = if labels.is_empty() {
+            (None, None)
+        } else {
             let acts: Vec<Action> = entries.iter().map(|e| e.action.clone()).collect();
             let options_model = self.user_config.model_for(CallSite::Options);
             let req = builders::options_request(
@@ -1145,19 +1322,14 @@ impl App {
                 &acts,
                 options_model,
             );
-            let flavored = match llm::chat_blocking_drain(&*self.client, req) {
-                Ok(s) if !s.trim().is_empty() => {
-                    builders::parse_options_response(&s, labels.len())
+            match self.client.chat_stream(req) {
+                Ok(rx) => (Some(rx), Some(hash_labels(&labels))),
+                Err(e) => {
+                    tracing::warn!(error = %e, "options stream failed; rendering bare labels");
+                    (None, None)
                 }
-                _ => Vec::new(),
-            };
-            if flavored.len() == labels.len() {
-                for (entry, line) in entries.iter_mut().zip(flavored.iter()) {
-                    entry.flavored = Some(line.clone());
-                }
-                options_cache.insert(key, flavored);
             }
-        }
+        };
 
         Ok(SceneState {
             here,
@@ -1172,6 +1344,9 @@ impl App {
             day_banner: None,
             narration_rx,
             narration_cache_key,
+            options_rx,
+            options_args_buffer: String::new(),
+            options_cache_key,
         })
     }
 
@@ -1199,11 +1374,19 @@ impl App {
                     scene.mode = SceneMode::DialogueLine {
                         npc,
                         buffer: String::new(),
+                        autocomplete_selected: 0,
                     };
                 }
             }
             Action::Move(dest) => {
                 self.do_move(dest)?;
+            }
+            Action::FollowNpc { npc: _, to } => {
+                // The follow action is mechanically a move; the NPC was
+                // already placed at `to` (or will be there shortly via the
+                // earlier `Moved` event from the relocate proposal). On
+                // arrival, the pending extra is cleared by `do_move`.
+                self.do_move(to)?;
             }
             Action::Wait => {
                 let here = self
@@ -1261,12 +1444,18 @@ impl App {
         self.close_case(outcome)
     }
 
-    /// Run the epilogue path: build the LLM request, swap to `Screen::Epilogue`.
+    /// Run the epilogue path: kick off a streaming LLM request and swap to
+    /// `Screen::Epilogue` immediately so the player isn't staring at a stuck
+    /// scene while the model thinks. The body fills in token-by-token via
+    /// `drain_epilogue_stream`; on stream error or empty completion we fall
+    /// back to `fallback_epilogue`.
     fn close_case(&mut self, outcome: CaseOutcome) -> Result<()> {
-        let body = {
+        let (body_rx, fallback_body) = {
             let Some(session) = self.session.as_ref() else {
                 return Ok(());
             };
+            let fallback =
+                builders::fallback_epilogue(&session.world, &session.incident, &outcome);
             let model = self.user_config.model_for(CallSite::Epilogue);
             let req = builders::epilogue_request(
                 &session.world,
@@ -1275,17 +1464,29 @@ impl App {
                 &outcome,
                 model,
             );
-            match self.client.chat(req) {
-                Ok(s) if !s.trim().is_empty() => s,
-                _ => builders::fallback_epilogue(&session.world, &session.incident, &outcome),
-            }
+            let rx = match self.client.chat_stream(req) {
+                Ok(rx) => Some(rx),
+                Err(e) => {
+                    tracing::warn!(error = %e, "epilogue stream failed; using fallback");
+                    None
+                }
+            };
+            (rx, fallback)
         };
         let label = outcome.short_label().to_string();
         tracing::info!(outcome = label.as_str(), "case closed");
+        // If the stream refused to start we go straight to the fallback so the
+        // player sees text on the first frame.
+        let (body, body_rx) = match body_rx {
+            Some(rx) => (String::new(), Some(rx)),
+            None => (fallback_body.clone(), None),
+        };
         self.screen = Screen::Epilogue(EpilogueState {
             body,
             outcome_label: label,
             scroll: 0,
+            body_rx,
+            fallback_body,
         });
         Ok(())
     }
@@ -1299,6 +1500,50 @@ impl App {
         let new_scene = self.begin_scene(here, Some(remaining))?;
         self.screen = Screen::Scene(new_scene);
         Ok(())
+    }
+
+    /// Dispatch a typed slash-command from the dialogue input. Returns
+    /// `Ok(true)` when the command asked to leave the conversation
+    /// (`/leave`), `Ok(false)` otherwise. The typed command is echoed back
+    /// as a `ChatLine::System` (not `Player`) so it shows in the transcript
+    /// without ever being seen by the LLM the next time the player speaks.
+    fn run_chat_command(&mut self, npc: NpcId, buffer: &str) -> Result<bool> {
+        let parsed = crate::ui::commands::parse(buffer);
+        let Some(session) = self.session.as_mut() else {
+            return Ok(false);
+        };
+        let now = Time {
+            day: session.world.day,
+            minute: session.world.clock_minutes,
+        };
+        let echo = ChatLine::System(buffer.trim().to_string());
+        match parsed {
+            crate::ui::commands::ParsedCommand::NotACommand => Ok(false),
+            crate::ui::commands::ParsedCommand::Unknown(verb) => {
+                let lines: Vec<ChatLine> = crate::ui::commands::run_unknown(verb)
+                    .into_iter()
+                    .map(ChatLine::System)
+                    .collect();
+                let history = session.dialogue_history.entry(npc).or_default();
+                history.push(echo);
+                history.extend(lines);
+                Ok(false)
+            }
+            crate::ui::commands::ParsedCommand::Match(cmd) => {
+                if cmd.name == "leave" {
+                    let history = session.dialogue_history.entry(npc).or_default();
+                    history.push(echo);
+                    history.push(ChatLine::System("(you step away)".into()));
+                    return Ok(true);
+                }
+                let lines =
+                    crate::ui::commands::run(cmd.name, &session.world, npc, now);
+                let history = session.dialogue_history.entry(npc).or_default();
+                history.push(echo);
+                history.extend(lines);
+                Ok(false)
+            }
+        }
     }
 
     fn do_observe(&mut self) -> Result<()> {
@@ -1382,6 +1627,10 @@ impl App {
             session.log.append(&ev)?;
             // Walking off ends any in-flight conversations.
             session.dialogue_history.clear();
+            // Follow-ups are location-scoped — drop them on movement so a
+            // stale "follow Aldwin to the chapel" doesn't linger after the
+            // player went elsewhere.
+            session.pending_extras.clear();
         }
         self.advance_scene_to(dest)?;
         Ok(())
@@ -1498,10 +1747,20 @@ impl App {
                 return Ok(());
             };
             let voice_model = self.user_config.model_for(CallSite::NpcVoice);
-            let history = session
+            let history: Vec<(bool, String)> = session
                 .dialogue_history
                 .get(&npc)
-                .cloned()
+                .map(|v| {
+                    v.iter()
+                        .filter_map(|line| match line {
+                            ChatLine::Player(s) => Some((true, s.clone())),
+                            ChatLine::Npc(s) => Some((false, s.clone())),
+                            // System lines (slash-command output) never reach
+                            // the LLM — they're for the player's eyes only.
+                            ChatLine::System(_) => None,
+                        })
+                        .collect()
+                })
                 .unwrap_or_default();
             let req = builders::npc_turn_request(
                 &session.world,
@@ -1538,7 +1797,7 @@ impl App {
                 .dialogue_history
                 .entry(npc)
                 .or_default()
-                .push((true, player_line.clone()));
+                .push(ChatLine::Player(player_line.clone()));
         }
 
         // 3. Park the scene in streaming mode. Notebook bullet + NPC Spoken
@@ -1639,14 +1898,19 @@ impl App {
         Ok(updates)
     }
 
-    /// True if the scene is currently consuming a streaming LLM response —
-    /// either a streaming NPC dialogue reply or the scene-open narration
-    /// arriving token-by-token.
+    /// True if any screen is currently consuming a streaming LLM response —
+    /// scene-open narration, options flavoring, NPC dialogue reply, or the
+    /// epilogue body.
     pub fn is_streaming(&self) -> bool {
-        let Screen::Scene(scene) = &self.screen else {
-            return false;
-        };
-        matches!(scene.mode, SceneMode::DialogueStreaming { .. }) || scene.narration_rx.is_some()
+        match &self.screen {
+            Screen::Scene(scene) => {
+                matches!(scene.mode, SceneMode::DialogueStreaming { .. })
+                    || scene.narration_rx.is_some()
+                    || scene.options_rx.is_some()
+            }
+            Screen::Epilogue(state) => state.body_rx.is_some(),
+            _ => false,
+        }
     }
 
     /// Drain the scene-open stream, if any, into `scene.narration`. On `Done`,
@@ -1704,6 +1968,110 @@ impl App {
         Ok(())
     }
 
+    /// Drain the options forced-tool stream, if any, accumulating `ToolArgs`
+    /// fragments. On `Done` we parse the JSON in one shot, fill in each
+    /// entry's `flavored` line, and cache the parsed result. While the stream
+    /// is in flight the UI keeps showing bare engine labels — they are
+    /// overwritten atomically when the parse succeeds.
+    fn drain_options_stream(&mut self) -> Result<()> {
+        let Screen::Scene(scene) = &mut self.screen else {
+            return Ok(());
+        };
+        let Some(rx) = scene.options_rx.as_ref() else {
+            return Ok(());
+        };
+        let mut completed = false;
+        let mut hard_error = false;
+        loop {
+            match rx.try_recv() {
+                Ok(llm::StreamChunk::ToolArgs(a)) => {
+                    scene.options_args_buffer.push_str(&a);
+                }
+                Ok(llm::StreamChunk::Token(t)) => {
+                    // Some providers emit the tool payload as plain content
+                    // under `force_tool`. Treat it the same.
+                    scene.options_args_buffer.push_str(&t);
+                }
+                Ok(llm::StreamChunk::Done) => {
+                    completed = true;
+                    break;
+                }
+                Ok(llm::StreamChunk::Error(e)) => {
+                    tracing::warn!(error = %e, "options stream error");
+                    hard_error = true;
+                }
+                Err(std::sync::mpsc::TryRecvError::Empty) => break,
+                Err(std::sync::mpsc::TryRecvError::Disconnected) => {
+                    completed = true;
+                    break;
+                }
+            }
+        }
+        if completed {
+            let expected = scene.actions.len();
+            let parsed = if hard_error || scene.options_args_buffer.trim().is_empty() {
+                Vec::new()
+            } else {
+                builders::parse_options_response(&scene.options_args_buffer, expected)
+            };
+            if parsed.len() == expected {
+                for (entry, line) in scene.actions.iter_mut().zip(parsed.iter()) {
+                    entry.flavored = Some(line.clone());
+                }
+                if let Some(key) = scene.options_cache_key.take() {
+                    scene.options_cache.insert(key, parsed);
+                }
+            }
+            scene.options_rx = None;
+            scene.options_args_buffer.clear();
+        }
+        Ok(())
+    }
+
+    /// Drain the epilogue stream, if any, into `state.body`. On `Done` (or a
+    /// disconnect) finalize the body — substituting `fallback_body` if the
+    /// stream produced nothing usable — and clear the receiver.
+    fn drain_epilogue_stream(&mut self) -> Result<()> {
+        let Screen::Epilogue(state) = &mut self.screen else {
+            return Ok(());
+        };
+        let Some(rx) = state.body_rx.as_ref() else {
+            return Ok(());
+        };
+        let mut completed = false;
+        let mut hard_error = false;
+        loop {
+            match rx.try_recv() {
+                Ok(llm::StreamChunk::Token(t)) => {
+                    state.body.push_str(&t);
+                }
+                Ok(llm::StreamChunk::ToolArgs(_)) => {
+                    // Epilogue request carries no tool; ignore stray fragments.
+                }
+                Ok(llm::StreamChunk::Done) => {
+                    completed = true;
+                    break;
+                }
+                Ok(llm::StreamChunk::Error(e)) => {
+                    tracing::warn!(error = %e, "epilogue stream error");
+                    hard_error = true;
+                }
+                Err(std::sync::mpsc::TryRecvError::Empty) => break,
+                Err(std::sync::mpsc::TryRecvError::Disconnected) => {
+                    completed = true;
+                    break;
+                }
+            }
+        }
+        if completed {
+            if hard_error || state.body.trim().is_empty() {
+                state.body = state.fallback_body.clone();
+            }
+            state.body_rx = None;
+        }
+        Ok(())
+    }
+
     /// Called when the stream channel emits `Done` (or hangs up). Emits the
     /// NPC's `Spoken` event, appends the notebook bullet, and transitions
     /// back to `DialogueReply` for the existing input-driven dismiss flow.
@@ -1743,9 +2111,9 @@ impl App {
         // Parse the combined response. On any parse failure, fall back to
         // treating the visible buffer as the reply and a default interpretation —
         // the conversation still moves forward even if the model misbehaved.
-        let (interpretation, mut response) =
+        let (interpretation, proposals, mut response) =
             match crate::llm::interpret::parse_npc_turn_response(source) {
-                Ok(parsed) => (parsed.interpretation(), parsed.reply),
+                Ok(parsed) => (parsed.interpretation(), parsed.proposals, parsed.reply),
                 Err(e) => {
                     tracing::warn!(
                         error = %e,
@@ -1754,6 +2122,7 @@ impl App {
                     );
                     (
                         crate::llm::interpret::PlayerLineInterpretation::default(),
+                        Vec::new(),
                         buffer.clone(),
                     )
                 }
@@ -1856,8 +2225,61 @@ impl App {
                 .dialogue_history
                 .entry(npc)
                 .or_default()
-                .push((false, response.clone()));
+                .push(ChatLine::Npc(response.clone()));
         }
+
+        // NPC tool proposals (relocate / fetch / hand_over / promise / break_off).
+        // Each proposal is validated and translated into bounded events; the
+        // returned follow-ups are queued for the next scene's action list.
+        let mut proposal_dialogue_ended = false;
+        let mut proposal_notebook_lines: Vec<String> = Vec::new();
+        if let Some(session) = self.session.as_mut() {
+            let time = Time {
+                day: session.world.day,
+                minute: session.world.clock_minutes,
+            };
+            let applied = engine::npc_tools::apply_proposals(
+                &session.world,
+                npc,
+                &proposals,
+                time,
+            );
+            let n_events = applied.events.len();
+            let n_followups = applied.followups.len();
+            let ended = applied.dialogue_ended;
+            for ev in &applied.events {
+                apply_event(&mut session.world, ev);
+                session.log.append(ev)?;
+            }
+            session.pending_extras.extend(applied.followups);
+            proposal_notebook_lines = applied.notebook;
+            if ended {
+                proposal_dialogue_ended = true;
+                // Drop the in-scene transcript so a re-Interview starts fresh.
+                session.dialogue_history.remove(&npc);
+            }
+            tracing::info!(
+                proposals = proposals.len(),
+                events = n_events,
+                followups = n_followups,
+                ended = ended,
+                "applied dialogue proposals"
+            );
+        }
+        // Drop the NPC out of the listener's location if they walked off and
+        // the player can no longer see them. (apply_event already handled the
+        // Moved event; this is a derived signal for the SceneMode transition.)
+        let npc_still_here = {
+            let session = self.session.as_ref();
+            session
+                .and_then(|s| {
+                    let here = s.world.npc(NpcId(0)).and_then(|p| p.location);
+                    let there = s.world.npc(npc).and_then(|n| n.location);
+                    here.zip(there).map(|(a, b)| a == b)
+                })
+                .unwrap_or(false)
+        };
+        let ended = proposal_dialogue_ended || !npc_still_here;
 
         // Notebook bullet.
         if let Some(session) = self.session.as_ref() {
@@ -1869,7 +2291,7 @@ impl App {
                 .and_then(|l| session.world.location(l))
                 .map(|l| l.name.clone())
                 .unwrap_or_default();
-            let bullet = format!(
+            let mut bullet = format!(
                 "- **Day {} / {}, {}.** I say to {}: \"{}\"\n  - {}: {}",
                 session.world.day,
                 time_label,
@@ -1879,6 +2301,12 @@ impl App {
                 npc_name,
                 response,
             );
+            // Append any proposal notebook lines as nested bullets so they
+            // read as direct consequences of the exchange.
+            for extra in &proposal_notebook_lines {
+                bullet.push_str("\n  ");
+                bullet.push_str(extra);
+            }
             session.save_dir.notebook_append(&bullet)?;
         }
 
@@ -1887,6 +2315,7 @@ impl App {
                 npc,
                 npc_name,
                 line: response,
+                ended,
             };
         }
         Ok(())
@@ -1950,6 +2379,8 @@ mod tests {
 
         assert_eq!(state.step, CreationStep::Setting);
         state.confirm(&registry);
+        assert_eq!(state.step, CreationStep::Sex);
+        state.confirm(&registry);
         assert_eq!(state.step, CreationStep::Virtue);
         state.confirm(&registry);
         assert_eq!(state.step, CreationStep::Vice);
@@ -1973,6 +2404,7 @@ mod tests {
             player.background,
             registry.vocation.backgrounds.backgrounds[0].name
         );
+        assert_eq!(player.sex, SEX_OPTIONS[0]);
         assert!(!player.name.is_empty());
         assert!(player.name.contains(' '));
     }
@@ -1987,17 +2419,31 @@ mod tests {
     }
 
     #[test]
-    fn back_from_virtue_returns_to_setting() {
+    fn back_from_sex_returns_to_setting() {
         let registry = load_registry();
         let cli = test_cli();
         let mut state = CreationState::new(1, &cli, &registry);
-        state.confirm(&registry); // Setting -> Virtue
-        assert_eq!(state.step, CreationStep::Virtue);
+        state.confirm(&registry); // Setting -> Sex
+        assert_eq!(state.step, CreationStep::Sex);
         assert!(
             !state.back(),
-            "back on Virtue should NOT signal return to title"
+            "back on Sex should NOT signal return to title"
         );
         assert_eq!(state.step, CreationStep::Setting);
+    }
+
+    #[test]
+    fn back_from_virtue_returns_to_sex_and_clears_sex() {
+        let registry = load_registry();
+        let cli = test_cli();
+        let mut state = CreationState::new(1, &cli, &registry);
+        state.confirm(&registry); // Setting -> Sex
+        state.confirm(&registry); // Sex -> Virtue
+        assert_eq!(state.step, CreationStep::Virtue);
+        assert!(state.sex.is_some());
+        assert!(!state.back());
+        assert_eq!(state.step, CreationStep::Sex);
+        assert!(state.sex.is_none());
     }
 
     #[test]
@@ -2005,7 +2451,8 @@ mod tests {
         let registry = load_registry();
         let cli = test_cli();
         let mut state = CreationState::new(1, &cli, &registry);
-        state.confirm(&registry); // Setting -> Virtue
+        state.confirm(&registry); // Setting -> Sex
+        state.confirm(&registry); // Sex -> Virtue
         state.selected_index = 2;
         state.confirm(&registry); // Virtue -> Vice
         assert_eq!(state.step, CreationStep::Vice);
@@ -2031,7 +2478,8 @@ mod tests {
         let cli = test_cli();
         let mut state = CreationState::new(1, &cli, &registry);
         // Skip past the Setting step (its option count depends on filesystem
-        // state) to land on Virtue, which is deterministic.
+        // state) and the Sex step (only two options) to land on Virtue.
+        state.confirm(&registry);
         state.confirm(&registry);
         assert_eq!(state.step, CreationStep::Virtue);
         let n = state.option_count(&registry);
@@ -2055,7 +2503,7 @@ mod tests {
         state.selected_index = 0;
         state.confirm(&registry);
         assert_eq!(state.staged_setting, pick);
-        assert_eq!(state.step, CreationStep::Virtue);
+        assert_eq!(state.step, CreationStep::Sex);
     }
 
     #[test]
@@ -2065,7 +2513,9 @@ mod tests {
         let cli = test_cli();
         let mut state = CreationState::new(7, &cli, &registry);
 
-        state.confirm(&registry); // Setting -> Virtue
+        state.confirm(&registry); // Setting -> Sex
+        state.selected_index = 1;
+        state.confirm(&registry); // Sex -> Virtue
         state.selected_index = 2;
         state.confirm(&registry); // Virtue
         state.selected_index = 1;

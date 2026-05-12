@@ -1,6 +1,6 @@
 ---
 source: tests/worldgen_snapshot.rs
-assertion_line: 126
+assertion_line: 127
 expression: npc_roster(&result.world)
 ---
 - id: 0
@@ -13,68 +13,68 @@ expression: npc_roster(&result.world)
   n_children: 0
   location_kind: social
 - id: 1
-  name: Gisela Shepherd
-  age: 28
+  name: Ursel Baker
+  age: 49
   sex: Female
-  occupation: fletcher
-  spouse: 25
+  occupation: watchman
+  spouse: 40
   n_parents: 0
   n_children: 3
   location_kind: trade
 - id: 2
-  name: Tobin Shepherd
-  age: 68
+  name: Yves Brewer
+  age: 5
   sex: Male
-  occupation: magistrate
-  spouse: ~
-  n_parents: 0
-  n_children: 0
-  location_kind: trade
-- id: 3
-  name: Halden Hollow
-  age: 40
-  sex: Male
-  occupation: magistrate
-  spouse: ~
-  n_parents: 0
-  n_children: 0
-  location_kind: civic
-- id: 4
-  name: Yves Smith
-  age: 31
-  sex: Male
-  occupation: smith
-  spouse: ~
-  n_parents: 0
-  n_children: 0
-  location_kind: social
-- id: 5
-  name: Rowena Shepherd
-  age: 16
-  sex: Female
   occupation: child
   spouse: ~
   n_parents: 2
   n_children: 0
-  location_kind: trade
-- id: 6
-  name: Osric Baker
-  age: 49
-  sex: Male
-  occupation: household
-  spouse: 27
-  n_parents: 0
-  n_children: 2
-  location_kind: rural
-- id: 7
-  name: Yseult Baker
-  age: 47
+  location_kind: social
+- id: 3
+  name: Zara Fletcher
+  age: 55
   sex: Female
-  occupation: tavernkeep
-  spouse: 28
+  occupation: idle
+  spouse: ~
   n_parents: 0
   n_children: 0
-  location_kind: civic
+  location_kind: social
+- id: 4
+  name: Nial Mason
+  age: 33
+  sex: Male
+  occupation: magistrate
+  spouse: ~
+  n_parents: 2
+  n_children: 0
+  location_kind: social
+- id: 5
+  name: Hela Baker
+  age: 56
+  sex: Female
+  occupation: smith
+  spouse: ~
+  n_parents: 0
+  n_children: 0
+  location_kind: trade
+- id: 6
+  name: Roald Sawyer
+  age: 22
+  sex: Male
+  occupation: idle
+  spouse: ~
+  n_parents: 2
+  n_children: 0
+  location_kind: trade
+- id: 7
+  name: Vela Glover
+  age: 26
+  sex: Female
+  occupation: fletcher
+  spouse: 14
+  n_parents: 2
+  n_children: 0
+  location_kind: trade
 - id: 8
   name: Petra Reeve
   age: 12
@@ -85,124 +85,259 @@ expression: npc_roster(&result.world)
   n_children: 0
   location_kind: trade
 - id: 9
-  name: Edmund Cooper
-  age: 62
-  sex: Male
-  occupation: household
-  spouse: 42
-  n_parents: 0
-  n_children: 1
-  location_kind: social
-- id: 10
-  name: Isolde Baker
-  age: 54
-  sex: Female
-  occupation: miller
-  spouse: ~
-  n_parents: 0
-  n_children: 0
-  location_kind: trade
-- id: 11
-  name: Odila Webb
-  age: 27
-  sex: Female
-  occupation: idle
-  spouse: ~
-  n_parents: 0
-  n_children: 0
-  location_kind: trade
-- id: 12
-  name: Linnet Sawyer
-  age: 69
-  sex: Female
-  occupation: idle
-  spouse: ~
-  n_parents: 0
-  n_children: 0
-  location_kind: social
-- id: 13
-  name: Thora Reeve
-  age: 43
-  sex: Female
-  occupation: farmhand
-  spouse: ~
-  n_parents: 0
-  n_children: 0
-  location_kind: social
-- id: 14
-  name: Garrick Shepherd
-  age: 20
+  name: Sten Reeve
+  age: 33
   sex: Male
   occupation: idle
-  spouse: ~
-  n_parents: 0
-  n_children: 0
-  location_kind: civic
-- id: 15
-  name: Aldwin Marsh
-  age: 51
-  sex: Male
-  occupation: household
-  spouse: 17
-  n_parents: 0
-  n_children: 0
-  location_kind: public
-- id: 16
-  name: Saewyn Reeve
-  age: 7
-  sex: Female
-  occupation: child
   spouse: ~
   n_parents: 2
   n_children: 0
   location_kind: social
-- id: 17
-  name: Isolde Miller
-  age: 52
+- id: 10
+  name: Zara Thatcher
+  age: 29
   sex: Female
-  occupation: household
-  spouse: 15
+  occupation: idle
+  spouse: ~
+  n_parents: 2
+  n_children: 0
+  location_kind: social
+- id: 11
+  name: Adela Baker
+  age: 46
+  sex: Female
+  occupation: tavernkeep
+  spouse: ~
   n_parents: 0
   n_children: 0
+  location_kind: public
+- id: 12
+  name: Cedric Marsh
+  age: 30
+  sex: Male
+  occupation: smith
+  spouse: 17
+  n_parents: 2
+  n_children: 4
   location_kind: civic
-- id: 18
-  name: Vance Wright
-  age: 29
+- id: 13
+  name: Ulric Cooper
+  age: 66
+  sex: Male
+  occupation: idle
+  spouse: ~
+  n_parents: 0
+  n_children: 0
+  location_kind: public
+- id: 14
+  name: Dunstan Hayward
+  age: 37
   sex: Male
   occupation: household
-  spouse: 30
+  spouse: 7
+  n_parents: 0
+  n_children: 0
+  location_kind: trade
+- id: 15
+  name: Yves Mason
+  age: 20
+  sex: Male
+  occupation: household
+  spouse: 43
+  n_parents: 0
+  n_children: 0
+  location_kind: trade
+- id: 16
+  name: Jorund Shepherd
+  age: 5
+  sex: Male
+  occupation: child
+  spouse: ~
+  n_parents: 2
+  n_children: 0
+  location_kind: civic
+- id: 17
+  name: Petra Thatcher
+  age: 45
+  sex: Female
+  occupation: household
+  spouse: 12
+  n_parents: 0
+  n_children: 4
+  location_kind: trade
+- id: 18
+  name: Isolde Thatcher
+  age: 22
+  sex: Female
+  occupation: apothecary
+  spouse: ~
   n_parents: 0
   n_children: 0
   location_kind: trade
 - id: 19
-  name: Ursel Smith
-  age: 33
+  name: Petra Brewer
+  age: 62
   sex: Female
-  occupation: apothecary
+  occupation: idle
   spouse: ~
   n_parents: 0
   n_children: 0
   location_kind: social
 - id: 20
-  name: Yves Cooper
-  age: 54
+  name: Garrick Weaver
+  age: 41
   sex: Male
+  occupation: fletcher
+  spouse: 28
+  n_parents: 0
+  n_children: 1
+  location_kind: trade
+- id: 21
+  name: Ursel Smith
+  age: 33
+  sex: Female
+  occupation: smith
+  spouse: 29
+  n_parents: 0
+  n_children: 2
+  location_kind: trade
+- id: 22
+  name: Tobin Hollow
+  age: 55
+  sex: Male
+  occupation: midwife
+  spouse: ~
+  n_parents: 0
+  n_children: 0
+  location_kind: social
+- id: 23
+  name: Edith Marsh
+  age: 42
+  sex: Female
+  occupation: magistrate
+  spouse: 27
+  n_parents: 0
+  n_children: 1
+  location_kind: civic
+- id: 24
+  name: Yseult Fletcher
+  age: 24
+  sex: Female
   occupation: apothecary
+  spouse: ~
+  n_parents: 2
+  n_children: 0
+  location_kind: civic
+- id: 25
+  name: Warin Walker
+  age: 50
+  sex: Male
+  occupation: magistrate
+  spouse: 38
+  n_parents: 0
+  n_children: 3
+  location_kind: social
+- id: 26
+  name: Frida Tanner
+  age: 53
+  sex: Female
+  occupation: household
+  spouse: 33
+  n_parents: 0
+  n_children: 2
+  location_kind: trade
+- id: 27
+  name: Aldwin Fowler
+  age: 42
+  sex: Male
+  occupation: household
+  spouse: 23
+  n_parents: 0
+  n_children: 1
+  location_kind: sacred
+- id: 28
+  name: Wilda Chandler
+  age: 46
+  sex: Female
+  occupation: fletcher
+  spouse: 20
+  n_parents: 0
+  n_children: 1
+  location_kind: civic
+- id: 29
+  name: Ivo Miller
+  age: 30
+  sex: Male
+  occupation: farmhand
+  spouse: 21
+  n_parents: 2
+  n_children: 2
+  location_kind: trade
+- id: 30
+  name: Leofric Miller
+  age: 24
+  sex: Male
+  occupation: idle
+  spouse: ~
+  n_parents: 2
+  n_children: 0
+  location_kind: social
+- id: 31
+  name: Cwen Marsh
+  age: 68
+  sex: Female
+  occupation: priest
+  spouse: ~
+  n_parents: 0
+  n_children: 0
+  location_kind: social
+- id: 32
+  name: Dunstan Shepherd
+  age: 42
+  sex: Male
+  occupation: miller
+  spouse: ~
+  n_parents: 0
+  n_children: 0
+  location_kind: civic
+- id: 33
+  name: Fenric Carter
+  age: 65
+  sex: Male
+  occupation: household
+  spouse: 26
+  n_parents: 0
+  n_children: 2
+  location_kind: social
+- id: 34
+  name: Nesta Turner
+  age: 11
+  sex: Female
+  occupation: child
+  spouse: ~
+  n_parents: 2
+  n_children: 0
+  location_kind: sacred
+- id: 35
+  name: Isolde Mason
+  age: 16
+  sex: Female
+  occupation: child
   spouse: ~
   n_parents: 0
   n_children: 0
   location_kind: trade
-- id: 21
-  name: Adela Smith
-  age: 32
+- id: 36
+  name: Edith Glover
+  age: 25
   sex: Female
-  occupation: smith
+  occupation: idle
   spouse: ~
-  n_parents: 0
+  n_parents: 2
   n_children: 0
-  location_kind: sacred
-- id: 22
-  name: Perrin Brewer
+  location_kind: rural
+- id: 37
+  name: Cedric Wright
   age: 9
   sex: Male
   occupation: child
@@ -210,201 +345,66 @@ expression: npc_roster(&result.world)
   n_parents: 2
   n_children: 0
   location_kind: social
-- id: 23
-  name: Frida Tanner
-  age: 53
+- id: 38
+  name: Yseult Turner
+  age: 52
   sex: Female
-  occupation: fletcher
-  spouse: 44
+  occupation: miller
+  spouse: 25
   n_parents: 0
-  n_children: 1
-  location_kind: rural
-- id: 24
-  name: Jutta Hayward
-  age: 45
+  n_children: 3
+  location_kind: trade
+- id: 39
+  name: Vela Shepherd
+  age: 7
   sex: Female
-  occupation: magistrate
+  occupation: child
   spouse: ~
-  n_parents: 0
+  n_parents: 2
   n_children: 0
   location_kind: social
-- id: 25
-  name: Osric Baker
-  age: 43
+- id: 40
+  name: Perrin Baker
+  age: 52
   sex: Male
   occupation: priest
   spouse: 1
   n_parents: 0
   n_children: 3
-  location_kind: trade
-- id: 26
-  name: Kara Mason
-  age: 50
-  sex: Female
-  occupation: midwife
-  spouse: 40
-  n_parents: 0
-  n_children: 0
-  location_kind: social
-- id: 27
-  name: Thora Shepherd
-  age: 37
-  sex: Female
-  occupation: watchman
-  spouse: 6
-  n_parents: 0
-  n_children: 2
-  location_kind: public
-- id: 28
-  name: Yves Cooper
-  age: 60
-  sex: Male
-  occupation: household
-  spouse: 7
-  n_parents: 0
-  n_children: 0
   location_kind: rural
-- id: 29
-  name: Edmund Fowler
-  age: 73
-  sex: Male
+- id: 41
+  name: Mara Miller
+  age: 76
+  sex: Female
   occupation: ~
   spouse: ~
   n_parents: 0
   n_children: 0
-  location_kind: social
-- id: 30
-  name: Odila Sawyer
-  age: 30
-  sex: Female
-  occupation: fletcher
-  spouse: 18
-  n_parents: 0
-  n_children: 0
-  location_kind: trade
-- id: 31
-  name: Fenric Weaver
-  age: 25
-  sex: Male
-  occupation: idle
-  spouse: ~
-  n_parents: 0
-  n_children: 0
-  location_kind: rural
-- id: 32
-  name: Edmund Glover
-  age: 25
-  sex: Male
-  occupation: household
-  spouse: 39
-  n_parents: 0
-  n_children: 0
-  location_kind: social
-- id: 33
-  name: Jutta Fletcher
-  age: 53
-  sex: Female
-  occupation: priest
-  spouse: ~
-  n_parents: 0
-  n_children: 0
   location_kind: public
-- id: 34
-  name: Halden Weaver
-  age: 28
-  sex: Male
-  occupation: miller
-  spouse: 35
-  n_parents: 0
-  n_children: 0
-  location_kind: public
-- id: 35
-  name: Jutta Marsh
-  age: 43
-  sex: Female
-  occupation: household
-  spouse: 34
-  n_parents: 0
-  n_children: 0
-  location_kind: trade
-- id: 36
-  name: Sten Shepherd
-  age: 17
-  sex: Male
-  occupation: child
-  spouse: ~
-  n_parents: 2
-  n_children: 0
-  location_kind: social
-- id: 37
-  name: Petra Carter
-  age: 35
-  sex: Female
-  occupation: idle
-  spouse: ~
-  n_parents: 0
-  n_children: 0
-  location_kind: public
-- id: 38
-  name: Dunstan Weaver
-  age: 4
-  sex: Male
-  occupation: child
-  spouse: ~
-  n_parents: 2
-  n_children: 0
-  location_kind: civic
-- id: 39
-  name: Thora Webb
-  age: 35
-  sex: Female
-  occupation: smith
-  spouse: 32
-  n_parents: 2
-  n_children: 0
-  location_kind: social
-- id: 40
-  name: Ulric Hayward
-  age: 65
-  sex: Male
-  occupation: household
-  spouse: 26
-  n_parents: 0
-  n_children: 0
-  location_kind: trade
-- id: 41
-  name: Warin Cooper
-  age: 12
-  sex: Male
-  occupation: child
-  spouse: ~
-  n_parents: 0
-  n_children: 0
-  location_kind: social
 - id: 42
-  name: Gisela Webb
-  age: 55
+  name: Frida Hayward
+  age: 61
   sex: Female
-  occupation: household
-  spouse: 9
+  occupation: apothecary
+  spouse: ~
   n_parents: 0
-  n_children: 1
+  n_children: 0
   location_kind: public
 - id: 43
-  name: Brunhild Cooper
-  age: 79
+  name: Frida Carter
+  age: 25
   sex: Female
+  occupation: household
+  spouse: 15
+  n_parents: 0
+  n_children: 0
+  location_kind: trade
+- id: 44
+  name: Aldwin Brewer
+  age: 72
+  sex: Male
   occupation: ~
   spouse: ~
   n_parents: 0
   n_children: 0
-  location_kind: social
-- id: 44
-  name: Leofric Carter
-  age: 38
-  sex: Male
-  occupation: apothecary
-  spouse: 23
-  n_parents: 0
-  n_children: 1
-  location_kind: social
+  location_kind: sacred

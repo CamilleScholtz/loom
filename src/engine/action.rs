@@ -25,12 +25,17 @@ pub enum Action {
     Accuse,
     /// Walk away from the village. Closes the case as `LeftTown`.
     LeaveTown,
+    /// Follow an NPC who has either led or invited the player to relocate
+    /// (via the `relocate` dialogue proposal). Resolves to a `Move(to)` if
+    /// the NPC is at the destination; otherwise simply moves the player and
+    /// leaves the trail open.
+    FollowNpc { npc: NpcId, to: LocationId },
 }
 
 impl Action {
     /// True if invoking this action consumes one of the day's four events.
     pub fn ends_scene(&self) -> bool {
-        matches!(self, Action::Move(_) | Action::Wait)
+        matches!(self, Action::Move(_) | Action::Wait | Action::FollowNpc { .. })
     }
 }
 
@@ -106,6 +111,17 @@ pub fn engine_label(world: &World, action: &Action) -> String {
                 world.place_kind.as_str()
             };
             format!("leave the {}", place)
+        }
+        Action::FollowNpc { npc, to } => {
+            let who = world
+                .npc(*npc)
+                .map(|n| n.name.as_str())
+                .unwrap_or("them");
+            let dest = world
+                .location(*to)
+                .map(|l| l.name.as_str())
+                .unwrap_or("there");
+            format!("follow {} to the {}", who, dest)
         }
     }
 }

@@ -7,8 +7,9 @@ use ratatui::{
 };
 
 use super::palette;
-use crate::app::{CreationState, CreationStep};
+use crate::app::{CreationState, CreationStep, SEX_OPTIONS};
 use crate::content::{ContentRegistry, TraitOption};
+use crate::world::Sex;
 
 pub fn render(frame: &mut Frame, state: &CreationState, registry: &ContentRegistry) {
     let area = frame.area();
@@ -29,6 +30,7 @@ pub fn render(frame: &mut Frame, state: &CreationState, registry: &ContentRegist
 fn render_header(frame: &mut Frame, area: Rect, state: &CreationState) {
     let title = match state.step {
         CreationStep::Setting => "Choose your setting.",
+        CreationStep::Sex => "Choose your gender.",
         CreationStep::Virtue => "Choose your virtue.",
         CreationStep::Vice => "Choose your vice.",
         CreationStep::Inclination => "Choose your inclination.",
@@ -51,6 +53,7 @@ fn render_header(frame: &mut Frame, area: Rect, state: &CreationState) {
 fn render_body(frame: &mut Frame, area: Rect, state: &CreationState, registry: &ContentRegistry) {
     let lines: Vec<Line> = match state.step {
         CreationStep::Setting => setting_lines(state),
+        CreationStep::Sex => sex_lines(state.selected_index),
         CreationStep::Virtue => trait_lines(&registry.setting.traits.virtues, state.selected_index, AccentKind::Virtue),
         CreationStep::Vice => trait_lines(&registry.setting.traits.vices, state.selected_index, AccentKind::Vice),
         CreationStep::Inclination => {
@@ -84,6 +87,37 @@ fn accent_style(kind: AccentKind) -> Style {
         AccentKind::Vice => Style::default().fg(ratatui::style::Color::Red),
         AccentKind::Inclination => Style::default().fg(ratatui::style::Color::Blue),
     }
+}
+
+fn sex_label(sex: Sex) -> &'static str {
+    match sex {
+        Sex::Female => "Woman  ♀",
+        Sex::Male => "Man  ♂",
+    }
+}
+
+fn sex_lines(selected: usize) -> Vec<Line<'static>> {
+    let mut lines = vec![Line::from("")];
+    let magenta = Style::default().fg(ratatui::style::Color::Magenta);
+    for (i, sex) in SEX_OPTIONS.iter().enumerate() {
+        let is_sel = i == selected;
+        let marker = if is_sel { "▶ " } else { "  " };
+        let name_style = if is_sel { palette::selected() } else { magenta };
+        lines.push(Line::from(vec![
+            Span::raw("  "),
+            Span::styled(
+                marker,
+                if is_sel {
+                    Style::default().add_modifier(Modifier::BOLD)
+                } else {
+                    palette::dim()
+                },
+            ),
+            Span::styled(sex_label(*sex), name_style),
+        ]));
+        lines.push(Line::from(""));
+    }
+    lines
 }
 
 fn setting_lines(state: &CreationState) -> Vec<Line<'static>> {
@@ -203,10 +237,13 @@ fn confirm_lines(state: &CreationState, registry: &ContentRegistry) -> Vec<Line<
     let red = Style::default().fg(ratatui::style::Color::Red);
     let blue = Style::default().fg(ratatui::style::Color::Blue);
     let cyan = Style::default().fg(ratatui::style::Color::Cyan);
+    let magenta = Style::default().fg(ratatui::style::Color::Magenta);
+    let gender = state.sex.map(|s| sex_label(s).to_string()).unwrap_or_else(|| none.clone());
     vec![
         Line::from(""),
         row("Setting", &state.staged_setting, cyan),
         row("Name", &state.rolled_name, palette::player()),
+        row("Gender", &gender, magenta),
         row("Vocation", vocation, cyan),
         row("Virtue", state.virtue.as_ref().unwrap_or(&none), green),
         row("Vice", state.vice.as_ref().unwrap_or(&none), red),

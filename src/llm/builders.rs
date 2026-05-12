@@ -194,6 +194,35 @@ fn knowledge_tag(edge: &KnowledgeEdge) -> String {
     format!("[{}, {}{}]", source, cert, distort)
 }
 
+/// Render reachable locations from `here` as `id: name` lines so the LLM can
+/// pick a valid LocationId for a `relocate` proposal. Returns "(nowhere
+/// reachable)" when the NPC has no current location or its location has no
+/// adjacent edges. The off-map sentinel (id 0) is filtered out — the player
+/// can't be invited to step off the world.
+fn adjacencies_from(world: &World, here: Option<LocationId>) -> String {
+    let Some(here) = here else {
+        return "(nowhere reachable)".to_string();
+    };
+    let Some(loc) = world.location(here) else {
+        return "(nowhere reachable)".to_string();
+    };
+    let mut entries: Vec<(u32, &str)> = loc
+        .adjacent
+        .iter()
+        .filter(|id| id.0 != 0)
+        .filter_map(|id| world.location(*id).map(|l| (id.0, l.name.as_str())))
+        .collect();
+    entries.sort_by_key(|(id, _)| *id);
+    if entries.is_empty() {
+        return "(nowhere reachable)".to_string();
+    }
+    entries
+        .into_iter()
+        .map(|(id, name)| format!("- {}: {}", id, name))
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
 /// Render the NPC's family ties by name: spouse, parents, children, employer.
 /// Each on its own line. Returns `(no known kin)` when none of these are set,
 /// which is the worldgen default for many villagers.
@@ -559,6 +588,9 @@ pub fn npc_turn_request(
         .map(|l| l.name.clone())
         .unwrap_or_else(|| "elsewhere".to_string());
     let scene_time = bucket_time(world.clock_minutes);
+    // Reachable locations from where the NPC stands — surfaces the legal
+    // `relocate` destinations so the model can pick a real LocationId.
+    let scene_adjacencies = adjacencies_from(world, n.and_then(|x| x.location));
 
     // Player profile — the NPC reacts to a person, not a faceless interlocutor.
     let player = world.npc(NpcId(0));
@@ -591,6 +623,7 @@ pub fn npc_turn_request(
             ("npc.goals_active", &goals),
             ("scene.where", &scene_where),
             ("scene.time", scene_time),
+            ("scene.adjacencies", &scene_adjacencies),
             ("player.name", &player_name),
             ("player.traits", &player_trts),
             ("player.reputation", &player_rep),

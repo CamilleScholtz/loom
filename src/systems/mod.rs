@@ -108,6 +108,72 @@ pub fn apply_event(world: &mut World, ev: &Event) {
                 npc.memorable_events.push(event.clone());
             }
         }
+        Event::HandedOver { giver, receiver, item, when: _ } => {
+            // Remove the first case-insensitive match from the giver's
+            // inventory. The transfer goes through whether the giver had the
+            // item or not — items are surface flavor, not load-bearing state.
+            if let Some(g) = world.npcs.get_mut(giver) {
+                if let Some(pos) = g
+                    .inventory
+                    .iter()
+                    .position(|x| x.eq_ignore_ascii_case(item))
+                {
+                    g.inventory.remove(pos);
+                }
+            }
+            if let Some(r) = world.npcs.get_mut(receiver) {
+                r.inventory.push(item.clone());
+            }
+        }
+        Event::LocationDiscovered {
+            id,
+            name,
+            location_kind,
+            description,
+            adjacent_to,
+            when: _,
+        } => {
+            // Insert the new location and forge a bidirectional adjacency
+            // edge to the location it was discovered from. The location
+            // becomes a first-class node — saveable, traversable, present
+            // in every begin_scene call from here on.
+            use crate::world::Location;
+            let mut loc = Location::new(*id, name.clone());
+            loc.kind = location_kind.clone();
+            loc.description = description.clone();
+            loc.adjacent.push(*adjacent_to);
+            world.insert_location(loc);
+            if let Some(anchor) = world.locations.get_mut(adjacent_to) {
+                if !anchor.adjacent.contains(id) {
+                    anchor.adjacent.push(*id);
+                }
+            }
+        }
+        Event::PromiseMade {
+            promisor,
+            promisee,
+            summary,
+            by_day,
+            when,
+        } => {
+            if let Some(npc) = world.npcs.get_mut(promisor) {
+                npc.promises.push(crate::world::Promise {
+                    promisee: *promisee,
+                    summary: summary.clone(),
+                    by_day: *by_day,
+                    made_at: *when,
+                });
+                // Also remember it from the promisor's side, so the npc_voice
+                // prompt next turn surfaces "I promised X" alongside the rest.
+                npc.memorable_events.push(crate::world::MemorableEvent {
+                    when: *when,
+                    summary: format!("I promised: {}", summary),
+                    valence: 0.1,
+                    related_to: Some(*promisee),
+                    fact: None,
+                });
+            }
+        }
     }
 }
 

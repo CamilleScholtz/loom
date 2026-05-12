@@ -18,6 +18,7 @@ fn fake_player() -> PlayerCharacter {
         vice: "Suspicious".into(),
         inclination: "Scholarly".into(),
         background: "Itinerant scholar".into(),
+        sex: loom::world::Sex::Female,
     }
 }
 

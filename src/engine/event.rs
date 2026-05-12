@@ -114,6 +114,46 @@ pub enum Event {
         event: MemorableEvent,
         when: Time,
     },
+    /// `giver` transfers an item (a plain string) to `receiver`. If the
+    /// giver's `inventory` lists the item it is removed; the receiver's
+    /// inventory always grows. Emitted by the NPC dialogue tool `hand_over`.
+    HandedOver {
+        giver: NpcId,
+        receiver: NpcId,
+        item: String,
+        when: Time,
+    },
+    /// `promisor` has voiced a commitment to `promisee`. The simulation
+    /// records this on the promisor's `promises` list; future ticks can
+    /// score honored/broken outcomes. Emitted by the NPC dialogue tool
+    /// `promise`.
+    PromiseMade {
+        promisor: NpcId,
+        promisee: NpcId,
+        summary: String,
+        #[serde(default)]
+        by_day: Option<u32>,
+        when: Time,
+    },
+    /// A new location has been named into existence during dialogue. The
+    /// engine allocated `id` and linked it bidirectionally to `adjacent_to`;
+    /// the LLM only supplied the surface text (`name`, `kind`, `description`).
+    /// Emitted by the NPC dialogue tool `discover_location` — typically
+    /// when an NPC says "let's go to my bunk" and "bunk" isn't a modeled
+    /// location yet.
+    LocationDiscovered {
+        id: LocationId,
+        name: String,
+        /// Optional category for the new place ("bunk", "corridor"). Field
+        /// is renamed at the wire so it doesn't clash with the enum's
+        /// `tag = "kind"` discriminator.
+        #[serde(default, rename = "location_kind")]
+        location_kind: String,
+        #[serde(default)]
+        description: String,
+        adjacent_to: LocationId,
+        when: Time,
+    },
 }
 
 pub struct EventLog {

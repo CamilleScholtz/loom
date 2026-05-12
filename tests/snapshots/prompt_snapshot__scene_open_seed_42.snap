@@ -1,6 +1,6 @@
 ---
 source: tests/prompt_snapshot.rs
-assertion_line: 35
+assertion_line: 36
 expression: sys
 ---
 You are the narrator opening a scene in a vaguely medieval village. Stay close to the protagonist's senses.
@@ -8,12 +8,12 @@ You are the narrator opening a scene in a vaguely medieval village. Stay close t
 <scene>
   <where>tavern</where>
   <time>night</time>
-  <present>Yves Smith, Edmund Cooper, Linnet Sawyer, Thora Reeve, Saewyn Reeve, Ursel Smith, Perrin Brewer, Jutta Hayward, Kara Mason, Edmund Fowler, Edmund Glover, Sten Shepherd, Thora Webb, Warin Cooper, Brunhild Cooper, Leofric Carter</present>
+  <present>Yves Brewer, Zara Fletcher, Nial Mason, Sten Reeve, Zara Thatcher, Petra Brewer, Tobin Hollow, Warin Walker, Leofric Miller, Cwen Marsh, Fenric Carter, Cedric Wright, Vela Shepherd</present>
 </scene>
 
 <protagonist>
   <mood>even</mood>
-  <recent_memorable>Isolde Baker and Thora Reeve are suspected of adultery</recent_memorable>
+  <recent_memorable>Zara Fletcher and Vela Glover are suspected of adultery</recent_memorable>
 </protagonist>
 
 <instructions>

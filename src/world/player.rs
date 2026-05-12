@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use super::ids::NpcId;
+use super::sex::Sex;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PlayerCharacter {
@@ -11,4 +12,6 @@ pub struct PlayerCharacter {
     pub vice: String,
     pub inclination: String,
     pub background: String,
+    #[serde(default)]
+    pub sex: Sex,
 }

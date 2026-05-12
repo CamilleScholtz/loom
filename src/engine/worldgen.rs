@@ -267,16 +267,19 @@ const ALL_VALUES: [Value; 8] = [
 ];
 
 /// Stage 2 — Population. Inserts 35–45 NPCs with names, ages, sex, traits,
-/// and value weights. Each NPC is placed at a random real (non-sentinel)
-/// location. NpcId(0) is reserved for the player and not used here.
+/// and value weights. NPCs are dealt round-robin across real (non-sentinel)
+/// locations so initial placement is even rather than Poisson-clumpy — with 11
+/// locations and ~40 NPCs that yields 3–4 per room instead of the occasional
+/// 7–8 a uniform random draw produces. NpcId(0) is reserved for the player.
 fn populate(world: &mut World, content: &ContentRegistry, rng: &mut ChaCha8Rng) {
     let n = rng.gen_range(POP_MIN..=POP_MAX);
-    let real_locations: Vec<LocationId> = world
+    let mut real_locations: Vec<LocationId> = world
         .locations
         .keys()
         .copied()
         .filter(|id| id.0 != 0)
         .collect();
+    real_locations.shuffle(rng);
 
     let names = &content.setting.names;
     let traits = &content.setting.traits;
@@ -322,9 +325,9 @@ fn populate(world: &mut World, content: &ContentRegistry, rng: &mut ChaCha8Rng) 
         }
         npc.values = weights.normalized();
 
-        // Place at a random real location.
+        // Deal round-robin across the shuffled location list.
         if !real_locations.is_empty() {
-            let pick = real_locations[rng.gen_range(0..real_locations.len())];
+            let pick = real_locations[(i as usize) % real_locations.len()];
             npc.location = Some(pick);
         }
 
@@ -994,7 +997,7 @@ fn place_player(
         npc.traits.inclinations.push(player.inclination.clone());
     }
     npc.age = 30;
-    npc.sex = Sex::default();
+    npc.sex = player.sex;
     npc.attracted_to = vec![Sex::Male, Sex::Female]; // player orientation is its own decision; default open
     npc.location = Some(entry);
     npc.occupation = Some(player.vocation.clone());
@@ -1088,6 +1091,7 @@ mod tests {
             vice: "Suspicious".into(),
             inclination: "Scholarly".into(),
             background: "Itinerant scholar".into(),
+            sex: Sex::Female,
         }
     }
 
